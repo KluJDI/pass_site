@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Паспорт безопасности</title>
+</head>
+<body>
+    <h1>Заполнение паспорта безопасности</h1>
+    <form action="/generate" method="post">
+        <!-- Примерные ключевые поля -->
+        <label>Населённый пункт:<br><input type="text" name="city" required></label><br><br>
+        <label>Наименование места:<br><input type="text" name="place_name" required></label><br><br>
+        <label>Адрес:<br><input type="text" name="address" required></label><br><br>
+        <label>Принадлежность:<br><input type="text" name="ownership"></label><br><br>
+        <label>Функциональное назначение:<br><input type="text" name="function"></label><br><br>
+        <label>Решение об отнесении к ММПЛ:<br><input type="text" name="decision"></label><br><br>
+        <label>Границы места:<br><input type="text" name="boundaries"></label><br><br>
+        <label>Площадь и периметр:<br><input type="text" name="area"></label><br><br>
+        <label>Кол-во людей:<br><input type="text" name="people_count"></label><br><br>
+        <label>Категория:<br><input type="text" name="category"></label><br><br>
+        <label>Органы МВД:<br><input type="text" name="mvd"></label><br><br>
+        <label>Общественные организации:<br><input type="text" name="orgs"></label><br><br>
+        <label>Характеристика местности:<br><input type="text" name="area_features"></label><br><br>
+        <label>Объекты на территории (через ;):<br><textarea name="objects_inside" rows="3"></textarea></label><br><br>
+        <label>Объекты рядом (через ;):<br><textarea name="objects_nearby" rows="3"></textarea></label><br><br>
+        <label>Транспорт (через ;):<br><textarea name="transport" rows="3"></textarea></label><br><br>
+        <label>Организации обслуживания:<br><textarea name="services" rows="3"></textarea></label><br><br>
+        <label>Прочее (любой текст):<br><textarea name="additional" rows="4"></textarea></label><br><br>
+
+        <button type="submit">Сгенерировать паспорт</button>
+    </form>
+</body>
+</html>
