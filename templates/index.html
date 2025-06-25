@@ -12,6 +12,7 @@
         }
         h1, h2 {
             color: #333;
+            margin-bottom: 10px;
         }
         form {
             background: white;
@@ -22,6 +23,7 @@
         label {
             display: block;
             margin: 10px 0 5px;
+            font-weight: bold;
         }
         input[type="text"], textarea {
             width: 100%;
@@ -29,20 +31,33 @@
             margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
         }
         .table-section {
             margin: 20px 0;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            background-color: #f9f9f9;
         }
         .table-row {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
-            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
         }
         .table-row input {
-            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .table-row:last-child {
+            border-bottom: none;
         }
         button {
             padding: 10px 20px;
@@ -51,18 +66,25 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #0056b3;
+        }
+        .submit-button {
+            background-color: #28a745;
+        }
+        .submit-button:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
     <h1>Заполнение паспорта безопасности</h1>
     <form action="/generate" method="POST">
-        <h2>Основные данные</h2>
+        <h2>Общие данные</h2>
         <label>Гриф или пометка:</label>
-        <input type="text" name="security_classification" placeholder="Введите гриф">
+        <input type="text" name="security_classification" placeholder="Введите гриф или пометку">
         <label>Номер экземпляра:</label>
         <input type="text" name="copy_number" placeholder="Введите номер экземпляра">
         <label>Руководитель исполнительного органа:</label>
@@ -163,107 +185,107 @@
         <input type="text" name="update_date" placeholder="ДД.ММ.ГГГГ">
 
         <div class="table-section">
-            <h2>Объекты на территории</h2>
+            <h2>2. Объекты на территории</h2>
             <div id="objects_on_territory">
                 <div class="table-row">
                     <input type="text" name="object_on_territory_name[]" placeholder="Наименование объекта">
                     <input type="text" name="object_on_territory_details[]" placeholder="Характеристика объекта">
-                    <input type="text" name="object_on_territory_location[]" placeholder="Место">
-                    <input type="text" name="object_on_territory_security[]" placeholder="Защита">
+                    <input type="text" name="object_on_territory_location[]" placeholder="Место расположения">
+                    <input type="text" name="object_on_territory_security[]" placeholder="Сведения о защите">
                 </div>
             </div>
             <button type="button" onclick="addRow('objects_on_territory')">Добавить объект</button>
         </div>
 
         <div class="table-section">
-            <h2>Соседние объекты</h2>
+            <h2>3. Соседние объекты</h2>
             <div id="objects_nearby">
                 <div class="table-row">
                     <input type="text" name="object_nearby_name[]" placeholder="Наименование объекта">
                     <input type="text" name="object_nearby_details[]" placeholder="Характеристика объекта">
-                    <input type="text" name="object_nearby_side[]" placeholder="Сторона">
-                    <input type="text" name="object_nearby_distance[]" placeholder="Расстояние">
+                    <input type="text" name="object_nearby_side[]" placeholder="Сторона расположения">
+                    <input type="text" name="object_nearby_distance[]" placeholder="Расстояние (м)">
                 </div>
             </div>
             <button type="button" onclick="addRow('objects_nearby')">Добавить объект</button>
         </div>
 
         <div class="table-section">
-            <h2>Транспортные коммуникации</h2>
+            <h2>4. Транспортные коммуникации</h2>
             <div id="transport">
                 <div class="table-row">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
-                    <input type="text" name="transport_name[]" placeholder="Наименование">
-                    <input type="text" name="transport_distance[]" placeholder="Расстояние">
+                    <input type="text" name="transport_name[]" placeholder="Наименование объекта">
+                    <input type="text" name="transport_distance[]" placeholder="Расстояние (м)">
                 </div>
             </div>
-            <button type="button" onclick="addRow('transport')">Добавить путь</button>
+            <button type="button" onclick="addRow('transport')">Добавить коммуникацию</button>
         </div>
 
         <div class="table-section">
-            <h2>Организации обслуживания</h2>
+            <h2>5. Организации обслуживания</h2>
             <div id="service_orgs">
                 <div class="table-row">
-                    <input type="text" name="service_org_name[]" placeholder="Наименование">
+                    <input type="text" name="service_org_name[]" placeholder="Наименование организации">
                     <input type="text" name="service_org_activity[]" placeholder="Вид деятельности">
-                    <input type="text" name="service_org_schedule[]" placeholder="График">
+                    <input type="text" name="service_org_schedule[]" placeholder="График работ">
                 </div>
             </div>
             <button type="button" onclick="addRow('service_orgs')">Добавить организацию</button>
         </div>
 
         <div class="table-section">
-            <h2>Опасные участки</h2>
+            <h2>7. Опасные участки</h2>
             <div id="dangerous_sections">
                 <div class="table-row">
-                    <input type="text" name="dangerous_section_name[]" placeholder="Наименование">
-                    <input type="text" name="dangerous_section_workers[]" placeholder="Работники">
-                    <input type="text" name="dangerous_section_risk[]" placeholder="Риск">
+                    <input type="text" name="dangerous_section_name[]" placeholder="Наименование участка">
+                    <input type="text" name="dangerous_section_workers[]" placeholder="Количество работников">
+                    <input type="text" name="dangerous_section_risk[]" placeholder="Характер ЧС">
                 </div>
             </div>
             <button type="button" onclick="addRow('dangerous_sections')">Добавить участок</button>
         </div>
 
         <div class="table-section">
-            <h2>Последствия угроз</h2>
+            <h2>9. Последствия террористического акта</h2>
             <div id="consequences">
                 <div class="table-row">
-                    <input type="text" name="threat_name[]" placeholder="Угроза">
-                    <input type="text" name="threat_victims[]" placeholder="Пострадавшие">
-                    <input type="text" name="threat_scale[]" placeholder="Масштаб">
+                    <input type="text" name="threat_name[]" placeholder="Террористическая угроза">
+                    <input type="text" name="threat_victims[]" placeholder="Количество пострадавших">
+                    <input type="text" name="threat_scale[]" placeholder="Масштаб последствий">
                 </div>
             </div>
             <button type="button" onclick="addRow('consequences')">Добавить угрозу</button>
         </div>
 
         <div class="table-section">
-            <h2>Состав нарядов</h2>
+            <h2>10г. Состав нарядов</h2>
             <div id="patrol_composition">
                 <div class="table-row">
-                    <input type="text" name="patrol_type[]" placeholder="Тип наряда">
-                    <input type="text" name="patrol_units[]" placeholder="Единицы">
-                    <input type="text" name="patrol_people[]" placeholder="Люди">
+                    <input type="text" name="patrol_type[]" placeholder="Вид наряда">
+                    <input type="text" name="patrol_units[]" placeholder="Количество единиц">
+                    <input type="text" name="patrol_people[]" placeholder="Количество человек">
                 </div>
             </div>
             <button type="button" onclick="addRow('patrol_composition')">Добавить наряд</button>
         </div>
 
         <div class="table-section">
-            <h2>Критические элементы</h2>
+            <h2>12. Критические элементы</h2>
             <div id="critical_elements">
                 <div class="table-row">
-                    <input type="text" name="critical_element_name[]" placeholder="Название">
+                    <input type="text" name="critical_element_name[]" placeholder="Наименование элемента">
                     <input type="text" name="critical_element_requirements[]" placeholder="Требования">
                     <input type="text" name="critical_element_physical_protection[]" placeholder="Физическая защита">
-                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение">
-                    <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность">
-                    <input type="text" name="critical_element_compensation[]" placeholder="Компенсация">
+                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение теракта">
+                    <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность мер">
+                    <input type="text" name="critical_element_compensation[]" placeholder="Компенсационные меры">
                 </div>
             </div>
             <button type="button" onclick="addRow('critical_elements')">Добавить элемент</button>
         </div>
 
-        <button type="submit">Сгенерировать паспорт</button>
+        <button type="submit" class="submit-button">Сгенерировать паспорт</button>
     </form>
 
     <script>
