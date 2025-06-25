@@ -8,7 +8,7 @@ import logging
 app = Flask(__name__)
 
 # Настройка логирования
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.route('/')
@@ -56,51 +56,63 @@ def generate():
         fields = {key: request.form.get(key, '') for key in text_fields_order}
         table_fields = {
             'objects_on_territory': {
-                'name': request.form.getlist('object_on_territory_name[]'),
-                'details': request.form.getlist('object_on_territory_details[]'),
-                'location': request.form.getlist('object_on_territory_location[]'),
-                'security': request.form.getlist('object_on_territory_security[]')
+                'name': request.form.getlist('object_on_territory_name'),
+                'details': request.form.getlist('object_on_territory_details'),
+                'location': request.form.getlist('object_on_territory_location'),
+                'security': request.form.getlist('object_on_territory_security')
             },
             'objects_nearby': {
-                'name': request.form.getlist('object_nearby_name[]'),
-                'details': request.form.getlist('object_nearby_details[]'),
-                'side': request.form.getlist('object_nearby_side[]'),
-                'distance': request.form.getlist('object_nearby_distance[]')
+                'name': request.form.getlist('object_nearby_name'),
+                'details': request.form.getlist('object_nearby_details'),
+                'side': request.form.getlist('object_nearby_side'),
+                'distance': request.form.getlist('object_nearby_distance')
             },
             'transport': {
-                'type': request.form.getlist('transport_type[]'),
-                'name': request.form.getlist('transport_name[]'),
-                'distance': request.form.getlist('transport_distance[]')
+                'type': request.form.getlist('transport_type'),
+                'name': request.form.getlist('transport_name'),
+                'distance': request.form.getlist('transport_distance')
             },
             'service_orgs': {
-                'name': request.form.getlist('service_org_name[]'),
-                'activity': request.form.getlist('service_org_activity[]'),
-                'schedule': request.form.getlist('service_org_schedule[]')
+                'name': request.form.getlist('service_org_name'),
+                'activity': request.form.getlist('service_org_activity'),
+                'schedule': request.form.getlist('service_org_schedule')
             },
             'dangerous_sections': {
-                'name': request.form.getlist('dangerous_section_name[]'),
-                'workers': request.form.getlist('dangerous_section_workers[]'),
-                'risk': request.form.getlist('dangerous_section_risk[]')
+                'name': request.form.getlist('dangerous_section_name'),
+                'workers': request.form.getlist('dangerous_section_workers'),
+                'risk': request.form.getlist('dangerous_section_risk')
             },
             'consequences': {
-                'name': request.form.getlist('threat_name[]'),
-                'victims': request.form.getlist('threat_victims[]'),
-                'scale': request.form.getlist('threat_scale[]')
+                'name': request.form.getlist('threat_name'),
+                'victims': request.form.getlist('threat_victims'),
+                'scale': request.form.getlist('threat_scale')
             },
             'patrol_composition': {
-                'type': request.form.getlist('patrol_type[]'),
-                'units': request.form.getlist('patrol_units[]'),
-                'people': request.form.getlist('patrol_people[]')
+                'type': request.form.getlist('patrol_type'),
+                'units': request.form.getlist('patrol_units'),
+                'people': request.form.getlist('patrol_people')
             },
             'critical_elements': {
-                'name': request.form.getlist('critical_element_name[]'),
-                'requirements': request.form.getlist('critical_element_requirements[]'),
-                'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
-                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
-                'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
-                'compensation': request.form.getlist('critical_element_compensation[]')
+                'name': request.form.getlist('critical_element_name'),
+                'requirements': request.form.getlist('critical_element_requirements'),
+                'physical_protection': request.form.getlist('critical_element_physical_protection'),
+                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention'),
+                'sufficiency': request.form.getlist('critical_element_sufficiency'),
+                'compensation': request.form.getlist('critical_element_compensation')
             }
         }
+
+        logger.debug(f"Данные формы (текстовые поля): {fields}")
+        for table_name, data in table_fields.items():
+            logger.debug(f"Данные формы (таблица {table_name}): {data}")
+
+        # Проверка данных таблиц
+        for table_name, data in table_fields.items():
+            lengths = {key: len(values) for key, values in data.items()}
+            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
+            if not all(len(values) == len(data[list(data.keys())[0]]) for values in data.values()):
+                logger.error(f"Несоответствие длины данных в таблице {table_name}: {lengths}")
+                return f"Ошибка: Несоответствие количества данных в таблице {table_name}", 400
 
         # Загружаем шаблон
         doc = Document(template_path)
@@ -110,65 +122,67 @@ def generate():
         def replace_placeholders(doc, fields):
             placeholder_index = 0
             for para in doc.paragraphs:
+                original_text = para.text
                 if re.search(r'_+', para.text):
                     if placeholder_index < len(text_fields_order):
                         key = text_fields_order[placeholder_index]
                         value = fields.get(key, '')
-                        para.text = re.sub(r'_+', value, para.text)
-                        logger.info(f"Замена в параграфе: '{para.text}' (ключ: {key})")
+                        para.text = re.sub(r'_+', value, para.text, count=1)
+                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
                         placeholder_index += 1
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
+                            original_text = para.text
                             if re.search(r'_+', para.text):
                                 if placeholder_index < len(text_fields_order):
                                     key = text_fields_order[placeholder_index]
                                     value = fields.get(key, '')
-                                    para.text = re.sub(r'_+', value, para.text)
-                                    logger.info(f"Таблица: замена '{para.text}' (ключ: {key})")
+                                    para.text = re.sub(r'_+', value, para.text, count=1)
+                                    logger.debug(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
                                     placeholder_index += 1
 
-        # Замена текстовых данных
+        # Замена текстовых заполнителей
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы
-        def update_table(table_index, field_data, expected_column_count):
+        # Функция обновления таблиц
+        def update_table(table_index, field_data, column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена")
                     return
-
                 table = doc.tables[table_index]
-                actual_columns = len(table.rows[0].cells) if table.rows else 0
-                logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_column_count}")
+                expected_columns = column_count + (1 if has_number_column else 0)
+                logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
+
+                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
+                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
+                    return
 
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
+                    logger.debug(f"Удалена строка в таблице {table_index}")
 
                 # Добавляем строки
-                row_count = len(field_data['name']) if field_data['name'] else 0
+                row_count = len(field_data[list(field_data.keys())[0]])
+                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
                 if row_count == 0:
-                    row = table.add_row()
-                    for cell in row.cells:
-                        cell.text = ''
+                    logger.warning(f"Нет данных для таблицы {table_index}")
                     return
 
                 for i in range(row_count):
                     row = table.add_row()
-                    if len(row.cells) != actual_columns:
-                        logger.error(f"Ошибка: новая строка в таблице {table_index} имеет {len(row.cells)} столбцов, ожидается {actual_columns}")
-                        continue
-                    if len(row.cells) > 0:
-                        row.cells[0].text = str(i + 1)  # Номер строки
-                    for j, key in enumerate(['name', 'details', 'location', 'security']):
-                        if j + 1 < actual_columns:
+                    cell_offset = 1 if has_number_column else 0
+                    if has_number_column:
+                        row.cells[0].text = str(i + 1)
+                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
+                    for j, key in enumerate(field_data.keys()):
+                        if j < column_count:
                             value = field_data[key][i] if i < len(field_data[key]) else ''
-                            row.cells[j + 1].text = value
-                        else:
-                            logger.warning(f"Пропущен столбец {j + 1} в таблице {table_index}")
-
+                            row.cells[j + cell_offset].text = value
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
@@ -180,7 +194,7 @@ def generate():
         update_table(3, table_fields['service_orgs'], 3)
         update_table(4, table_fields['dangerous_sections'], 3)
         update_table(5, table_fields['consequences'], 3)
-        update_table(6, table_fields['patrol_composition'], 3)
+        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)
         update_table(7, table_fields['critical_elements'], 6)
 
         # Сохраняем документ
