@@ -1,5 +1,6 @@
 from flask import Flask, request, send_file, render_template
 from docx import Document
+from docx.oxml.ns import qn
 import io
 import re
 import os
@@ -121,11 +122,20 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Логирование структуры таблиц
+        # Логирование структуры таблиц и проверка объединённых ячеек
         for i, table in enumerate(doc.tables):
             if table.rows:
                 columns = len(table.rows[0].cells)
-                headers = [cell.text.strip() for cell in table.rows[0].cells]
+                headers = []
+                for cell in table.rows[0].cells:
+                    text = cell.text.strip()
+                    # Проверка объединённых ячеек
+                    cell_element = cell._element
+                    grid_span = cell_element.get(qn('w:gridSpan'))
+                    if grid_span:
+                        headers.append(f"{text} (gridSpan={grid_span})")
+                    else:
+                        headers.append(text)
                 logger.info(f"Таблица {i}: {columns} столбцов, заголовки: {headers}")
             else:
                 logger.warning(f"Таблица {i} пустая или без строк")
@@ -170,6 +180,14 @@ def generate():
                 expected_columns = expected_column_count + (1 if has_number_column else 0)
                 logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_columns}")
 
+                # Проверка объединённых ячеек в первой строке
+                effective_columns = actual_columns
+                for cell in table.rows[0].cells:
+                    grid_span = cell._element.get(qn('w:gridSpan'))
+                    if grid_span:
+                        effective_columns += int(grid_span) - 1
+                logger.info(f"Таблица {table_index}, эффективное количество столбцов (с учётом gridSpan): {effective_columns}")
+
                 # Используем минимальное количество столбцов
                 column_count = min(actual_columns - (1 if has_number_column else 0), expected_column_count)
                 if column_count < 0:
@@ -207,6 +225,7 @@ def generate():
                             logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
                         elif j + cell_offset >= len(row.cells):
                             logger.warning(f"Пропущен столбец {j + cell_offset} в таблице {table_index}, так как он превышает количество столбцов в шаблоне")
+
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
