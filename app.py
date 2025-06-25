@@ -1,4 +1,3 @@
-```python
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
@@ -85,8 +84,8 @@ def generate():
         # Проверка, что данные для таблиц не пустые
         for table_name, data in table_fields.items():
             if not data[list(data.keys())[0]]:
-                logger.warning(f"Данные для таблицы {table_name} пустые, пропускаем")
-                table_fields[table_name] = {key: [''] for key in data.keys()}  # Заполняем пустыми значениями
+                logger.warning(f"Данные для таблицы {table_name} пустые, заполняем пустыми значениями")
+                table_fields[table_name] = {key: [''] for key in data.keys()}
 
         # Загружаем шаблон
         doc = Document(template_path)
@@ -120,8 +119,8 @@ def generate():
                 logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {column_count + 1}")
 
                 # Проверка количества столбцов
-                if len(table.rows[0].cells) < column_count + 1:
-                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells)} столбцов, ожидается {column_count + 1}")
+                if len(table.rows) == 0 or len(table.rows[0].cells) < column_count + 1:
+                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {column_count + 1}")
                     return
 
                 # Очищаем строки, кроме заголовка
