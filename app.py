@@ -154,42 +154,42 @@ def generate():
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена")
-                return
+                    return
 
-            table = doc.tables[table_index]
-            expected_columns = column_count + (1 if has_number_column else 0)
-            logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
+                table = doc.tables[table_index]
+                expected_columns = column_count + (1 if has_number_column else 0)
+                logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
 
-            if len(table.rows) or len(table_rows[0].cells) != expected_columns:
-                logger.error(f"Таблица {table_index} имеет {len(table_rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
-                return f"Ошибка: Неправильное количество столбцов в таблице {table_index}", 400
+                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
+                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
+                    return
 
-            # Очищаем строки, кроме заголовка
-            while len(table_rows) > 1:
-                table._element.remove(table_rows[-1]._element)
-                logger.debug(f"Удалена строка в таблице {table_index}")
+                # Очищаем строки, кроме заголовка
+                while len(table.rows) > 1:
+                    table._element.remove(table.rows[-1]._element)
+                    logger.debug(f"Удалена строка в таблице {table_index}")
 
-            # Добавляем строки
-            row_count = max(len(field_data[key]) for key in field_data) if any(field_data[key] for key in field_data) else 0
-            logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
-            if row_count == 0:
-                logger.warning(f"Нет данных для таблицы {table_index}, добавляем пустую строку")
-                row = table.add_row()
-                for cell in row.cells:
-                    cell.text = ''
-                return
+                # Добавляем строки
+                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
+                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
+                if row_count == 0:
+                    logger.warning(f"Нет данных для таблицы {table_index}, добавляем пустую строку")
+                    row = table.add_row()
+                    for cell in row.cells:
+                        cell.text = ''
+                    return
 
-            for i in range(row_count):
-                row = table.add_row()
-                cell_offset = 1 if has_number_column else 0
-                if has_number_column:
-                    row.cells[0].text = str(i + 1)
-                    logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
-                for j, key in enumerate(field_data.keys()):
-                    if j < column_count:
-                        value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                        row.cells[j + cell_offset].text = value
-                        logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
+                for i in range(row_count):
+                    row = table.add_row()
+                    cell_offset = 1 if has_number_column else 0
+                    if has_number_column:
+                        row.cells[0].text = str(i + 1)
+                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
+                    for j, key in enumerate(field_data.keys()):
+                        if j < column_count:
+                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
+                            row.cells[j + cell_offset].text = value
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
