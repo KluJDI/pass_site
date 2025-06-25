@@ -150,7 +150,7 @@ def generate():
         replace_placeholders(doc, fields)
 
         # Функция обновления таблицы
-        def update_table(table_index, field_data, column_count, has_number_column=True):
+        def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена")
@@ -158,14 +158,14 @@ def generate():
 
                 table = doc.tables[table_index]
                 actual_columns = len(table.rows[0].cells) if table.rows else 0
-                expected_columns = column_count + (1 if has_number_column else 0)
+                expected_columns = expected_column_count + (1 if has_number_column else 0)
                 logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_columns}")
 
-                # Проверка структуры таблицы
-                if not table.rows or actual_columns != expected_columns:
-                    logger.warning(f"Таблица {table_index} имеет {actual_columns} столбцов, ожидается {expected_columns}. Используем фактическое количество столбцов.")
-                    expected_columns = actual_columns
-                    column_count = actual_columns - (1 if has_number_column else 0)
+                # Используем фактическое количество столбцов
+                column_count = actual_columns - (1 if has_number_column else 0)
+                if column_count < 0:
+                    logger.error(f"Таблица {table_index} имеет некорректное количество столбцов: {actual_columns}")
+                    return
 
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
@@ -184,6 +184,9 @@ def generate():
 
                 for i in range(row_count):
                     row = table.add_row()
+                    if len(row.cells) != actual_columns:
+                        logger.error(f"Ошибка: новая строка в таблице {table_index} имеет {len(row.cells)} столбцов, ожидается {actual_columns}")
+                        continue
                     cell_offset = 1 if has_number_column else 0
                     if has_number_column and len(row.cells) > 0:
                         row.cells[0].text = str(i + 1)
@@ -199,7 +202,7 @@ def generate():
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
-        # Обновляем таблицы
+        # Обновляем таблицы с ожидаемым количеством столбцов (без учета номера)
         update_table(0, table_fields['objects_on_territory'], 4)
         update_table(1, table_fields['objects_nearby'], 4)
         update_table(2, table_fields['transport'], 3)
