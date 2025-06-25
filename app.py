@@ -8,7 +8,7 @@ import logging
 app = Flask(__name__)
 
 # Настройка логирования
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.route('/')
@@ -102,16 +102,9 @@ def generate():
             }
         }
 
-        logger.debug(f"Данные формы (текстовые поля): {fields}")
-        for table_name, data in table_fields.items():
-            logger.debug(f"Данные формы (таблица {table_name}): {data}")
-            lengths = {key: len(values) for key, values in data.items()}
-            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
-
         # Проверка данных таблиц
         for table_name, data in table_fields.items():
             if not any(data[key] for key in data):
-                logger.warning(f"Таблица {table_name} пустая")
                 table_fields[table_name] = {key: [''] for key in data}
             elif not all(len(data[key]) == len(data[list(data.keys())[0]]) for key in data):
                 logger.error(f"Несоответствие длины данных в таблице {table_name}")
@@ -121,16 +114,7 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Логирование структуры таблиц
-        for i, table in enumerate(doc.tables):
-            if table.rows and table.rows[0].cells:
-                columns = len(table.rows[0].cells)
-                headers = [cell.text.strip() for cell in table.rows[0].cells]
-                logger.info(f"Таблица {i}: {columns} столбцов, заголовки: {headers}")
-            else:
-                logger.warning(f"Таблица {i} пустая или без строк")
-
-        # Функция замены текстовых заполнителей
+        # Функция замены текстовых заполнителей с выравниванием по центру
         def replace_placeholders(doc, fields):
             placeholder_index = 0
             for para in doc.paragraphs:
@@ -140,7 +124,8 @@ def generate():
                         key = text_fields_order[placeholder_index]
                         value = fields.get(key, '')
                         para.text = re.sub(r'_+', value, para.text)
-                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
+                        para.alignment = 1  # 1 = выравнивание по центру
+                        logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
                         placeholder_index += 1
             for table in doc.tables:
                 for row in table.rows:
@@ -152,13 +137,14 @@ def generate():
                                     key = text_fields_order[placeholder_index]
                                     value = fields.get(key, '')
                                     para.text = re.sub(r'_+', value, para.text)
-                                    logger.debug(f"Таблица: замена '{original_text}' -> '{para.text}' (ключ: {key})")
+                                    para.alignment = 1  # Выравнивание по центру
+                                    logger.info(f"Таблица: замена '{original_text}' -> '{para.text}' (ключ: {key})")
                                     placeholder_index += 1
 
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы (упрощённая, как было изначально)
+        # Функция обновления таблицы без автоматического добавления "1"
         def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
@@ -172,13 +158,10 @@ def generate():
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
-                    logger.debug(f"Удалена строка в таблице {table_index}")
 
-                # Добавляем строки
+                # Добавляем строки только если есть данные
                 row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
-                logger.debug(f"Добавление {row_count} строк в таблице {table_index}")
                 if row_count == 0:
-                    logger.warning(f"Нет данных для таблицы {table_index}, добавляем пустую строку")
                     row = table.add_row()
                     for cell in row.cells:
                         cell.text = ''
@@ -190,31 +173,31 @@ def generate():
                         logger.error(f"Ошибка: новая строка в таблице {table_index} имеет {len(row.cells)} столбцов, ожидается {actual_columns}")
                         continue
                     cell_offset = 1 if has_number_column else 0
-                    if has_number_column and len(row.cells) > 0:
+                    if has_number_column and len(row.cells) > 0 and 'N п/п' in [h.text.strip() for h in table.rows[0].cells]:
                         row.cells[0].text = str(i + 1)
-                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
                     for j, key in enumerate(field_data.keys()):
                         target_column = j + cell_offset
                         if target_column < actual_columns:
                             value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
                             row.cells[target_column].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {target_column}: {value} (ключ: {key})")
+                            for para in row.cells[target_column].paragraphs:
+                                para.alignment = 1  # Выравнивание по центру
                         else:
-                            logger.warning(f"Пропущен столбец {target_column} в таблице {table_index}, так как он превышает количество столбцов в шаблоне")
+                            logger.warning(f"Пропущен столбец {target_column} в таблице {table_index}")
 
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
-        # Обновляем таблицы (как было изначально, с минимальными изменениями)
-        update_table(0, table_fields['objects_on_territory'], 4)
-        update_table(1, table_fields['objects_nearby'], 4)
-        update_table(2, table_fields['transport'], 3)
-        update_table(3, table_fields['service_orgs'], 3)
-        update_table(4, table_fields['dangerous_sections'], 3)
-        update_table(5, table_fields['consequences'], 3)
+        # Обновляем таблицы
+        update_table(0, table_fields['objects_on_territory'], 4, has_number_column=True)
+        update_table(1, table_fields['objects_nearby'], 4, has_number_column=True)
+        update_table(2, table_fields['transport'], 3, has_number_column=True)
+        update_table(3, table_fields['service_orgs'], 3, has_number_column=True)
+        update_table(4, table_fields['dangerous_sections'], 3, has_number_column=True)
+        update_table(5, table_fields['consequences'], 3, has_number_column=True)
         update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)
-        update_table(7, table_fields['critical_elements'], 6)
+        update_table(7, table_fields['critical_elements'], 6, has_number_column=True)
 
         # Сохраняем документ
         output = io.BytesIO()
