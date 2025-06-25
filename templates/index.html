@@ -71,7 +71,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin: 10px 5px;
+            margin: 10px 0;
         }
         button:hover {
             background-color: #0056b3;
@@ -82,17 +82,11 @@
         .submit-button:hover {
             background-color: #218838;
         }
-        .debug-button {
-            background-color: #ffc107;
-        }
-        .debug-button:hover {
-            background-color: #e0a800;
-        }
     </style>
 </head>
 <body>
     <h1>Заполнение паспорта безопасности</h1>
-    <form id="passportForm" action="/generate" method="POST">
+    <form action="/generate" method="POST">
         <h2>Общие данные</h2>
         <label>Гриф или пометка:</label>
         <input type="text" name="security_classification" placeholder="Введите гриф или пометку">
@@ -375,41 +369,16 @@
             <button type="button" onclick="addRow('critical_elements')">Добавить элемент</button>
         </div>
 
-        <button type="button" class="debug-button" onclick="debugForm()">Проверить данные формы</button>
         <button type="submit" class="submit-button">Сгенерировать паспорт</button>
     </form>
 
     <script>
         function addRow(tableId) {
             const table = document.getElementById(tableId);
-            const templateRow = table.querySelector('.table-row');
-            const newRow = templateRow.cloneNode(true);
-            newRow.querySelectorAll('input').forEach(input => {
-                input.value = '';
-                if (!input.name.endsWith('[]')) {
-                    input.name = input.name + '[]';
-                }
-            });
-            table.appendChild(newRow);
+            const row = table.children[0].cloneNode(true);
+            row.querySelectorAll('input').forEach(input => input.value = '');
+            table.appendChild(row);
         }
-
-        function debugForm() {
-            const form = document.getElementById('passportForm');
-            const formData = new FormData(form);
-            console.log('Данные формы:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-            alert('Данные формы выведены в консоль браузера (F12 -> Console)');
-        }
-
-        document.getElementById('passportForm').addEventListener('submit', function(e) {
-            const formData = new FormData(this);
-            console.log('Отправляемые данные формы:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-        });
     </script>
 </body>
 </html>
