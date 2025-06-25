@@ -95,7 +95,7 @@ def generate():
         }
 
         # Собираем данные из формы
-        fields = {key: request.form.get(key, '') for key in text_fields}
+        fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
         # Таблицы
         table_fields = {
@@ -159,6 +159,8 @@ def generate():
                         value = fields.get(key, '').strip()
                         if value:
                             para.text = original_text.replace(placeholder, value)
+                        else:
+                            para.text = original_text  # Сохраняем подчёркивания, если данных нет
                         para.alignment = 1  # Выравнивание по центру
                         logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
             for table in doc.tables:
@@ -171,6 +173,8 @@ def generate():
                                     value = fields.get(key, '').strip()
                                     if value:
                                         para.text = original_text.replace(placeholder, value)
+                                    else:
+                                        para.text = original_text  # Сохраняем подчёркивания
                                     para.alignment = 1  # Выравнивание по центру
                                     logger.info(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key})")
 
