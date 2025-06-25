@@ -3,182 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Заполнение паспорта безопасности</title>
+    <title>Паспорт безопасности</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
-        .table-section { margin-top: 20px; }
-        .table-row { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-        button { padding: 10px 20px; margin-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .table-section {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .table-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .table-row input {
+            flex: 1;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <h1>Заполнение паспорта безопасности</h1>
     <form action="/generate" method="POST">
-        <div class="form-group">
-            <label for="classification">Гриф или пометка:</label>
-            <input type="text" id="classification" name="classification">
-        </div>
-        <div class="form-group">
-            <label for="copy_number">Экз. N:</label>
-            <input type="text" id="copy_number" name="copy_number">
-        </div>
-        <div class="form-group">
-            <label for="approver_title">Утверждаю (руководитель):</label>
-            <input type="text" id="approver_title" name="approver_title">
-        </div>
-        <div class="form-group">
-            <label for="approver_signature">Подпись утверждающего:</label>
-            <input type="text" id="approver_signature" name="approver_signature">
-        </div>
-        <div class="form-group">
-            <label for="approver_name">Ф.И.О. утверждающего:</label>
-            <input type="text" id="approver_name" name="approver_name">
-        </div>
-        <div class="form-group">
-            <label for="approver_date">Дата утверждения:</label>
-            <input type="text" id="approver_date" name="approver_date">
-        </div>
-        <div class="form-group">
-            <label for="security_agency_head">Руководитель территориального органа безопасности:</label>
-            <input type="text" id="security_agency_head" name="security_agency_head">
-        </div>
-        <div class="form-group">
-            <label for="security_signature">Подпись органа безопасности:</label>
-            <input type="text" id="security_signature" name="security_signature">
-        </div>
-        <div class="form-group">
-            <label for="security_name">Ф.И.О. органа безопасности:</label>
-            <input type="text" id="security_name" name="security_name">
-        </div>
-        <div class="form-group">
-            <label for="security_date">Дата согласования органа безопасности:</label>
-            <input type="text" id="security_date" name="security_date">
-        </div>
-        <div class="form-group">
-            <label for="mvd_head">Руководитель территориального органа МВД:</label>
-            <input type="text" id="mvd_head" name="mvd_head">
-        </div>
-        <div class="form-group">
-            <label for="mvd_signature">Подпись органа МВД:</label>
-            <input type="text" id="mvd_signature" name="mvd_signature">
-        </div>
-        <div class="form-group">
-            <label for="mvd_name">Ф.И.О. органа МВД:</label>
-            <input type="text" id="mvd_name" name="mvd_name">
-        </div>
-        <div class="form-group">
-            <label for="mvd_date">Дата согласования органа МВД:</label>
-            <input type="text" id="mvd_date" name="mvd_date">
-        </div>
-        <div class="form-group">
-            <label for="mchs_head">Руководитель территориального органа МЧС:</label>
-            <input type="text" id="mchs_head" name="mchs_head">
-        </div>
-        <div class="form-group">
-            <label for="mchs_signature">Подпись органа МЧС:</label>
-            <input type="text" id="mchs_signature" name="mchs_signature">
-        </div>
-        <div class="form-group">
-            <label for="mchs_name">Ф.И.О. органа МЧС:</label>
-            <input type="text" id="mchs_name" name="mchs_name">
-        </div>
-        <div class="form-group">
-            <label for="mchs_date">Дата согласования органа МЧС:</label>
-            <input type="text" id="mchs_date" name="mchs_date">
-        </div>
-        <div class="form-group">
-            <label for="rosgvardia_head">Руководитель органа Росгвардии:</label>
-            <input type="text" id="rosgvardia_head" name="rosgvardia_head">
-        </div>
-        <div class="form-group">
-            <label for="rosgvardia_signature">Подпись органа Росгвардии:</label>
-            <input type="text" id="rosgvardia_signature" name="rosgvardia_signature">
-        </div>
-        <div class="form-group">
-            <label for="rosgvardia_name">Ф.И.О. органа Росгвардии:</label>
-            <input type="text" id="rosgvardia_name" name="rosgvardia_name">
-        </div>
-        <div class="form-group">
-            <label for="rosgvardia_date">Дата согласования органа Росгвардии:</label>
-            <input type="text" id="rosgvardia_date" name="rosgvardia_date">
-        </div>
-        <div class="form-group">
-            <label for="locality">Населённый пункт:</label>
-            <input type="text" id="locality" name="locality">
-        </div>
-        <div class="form-group">
-            <label for="place_name">Наименование места:</label>
-            <input type="text" id="place_name" name="place_name">
-        </div>
-        <div class="form-group">
-            <label for="address">Адрес:</label>
-            <input type="text" id="address" name="address">
-        </div>
-        <div class="form-group">
-            <label for="ownership">Принадлежность:</label>
-            <input type="text" id="ownership" name="ownership">
-        </div>
-        <div class="form-group">
-            <label for="function">Функциональное назначение:</label>
-            <input type="text" id="function" name="function">
-        </div>
-        <div class="form-group">
-            <label for="designation_decision">Решение об отнесении к ММПЛ:</label>
-            <input type="text" id="designation_decision" name="designation_decision">
-        </div>
-        <div class="form-group">
-            <label for="boundaries">Границы места:</label>
-            <input type="text" id="boundaries" name="boundaries">
-        </div>
-        <div class="form-group">
-            <label for="area_perimeter">Площадь и периметр:</label>
-            <input type="text" id="area_perimeter" name="area_perimeter">
-        </div>
-        <div class="form-group">
-            <label for="people_count">Кол-во людей:</label>
-            <input type="text" id="people_count" name="people_count">
-        </div>
-        <div class="form-group">
-            <label for="category">Категория:</label>
-            <input type="text" id="category" name="category">
-        </div>
-        <div class="form-group">
-            <label for="mvd_org">Органы МВД:</label>
-            <input type="text" id="mvd_org" name="mvd_org">
-        </div>
-        <div class="form-group">
-            <label for="public_orgs">Общественные организации:</label>
-            <input type="text" id="public_orgs" name="public_orgs">
-        </div>
-        <div class="form-group">
-            <label for="terrain">Характеристика местности:</label>
-            <input type="text" id="terrain" name="terrain">
-        </div>
-        <div class="form-group">
-            <label for="objects_on_territory">Объекты на территории (через ;):</label>
-            <input type="text" id="objects_on_territory" name="objects_on_territory">
-        </div>
-        <div class="form-group">
-            <label for="objects_nearby">Объекты рядом (через ;):</label>
-            <input type="text" id="objects_nearby" name="objects_nearby">
-        </div>
-        <div class="form-group">
-            <label for="transport">Транспорт (через ;):</label>
-            <input type="text" id="transport" name="transport">
-        </div>
-        <div class="form-group">
-            <label for="service_orgs">Организации обслуживания:</label>
-            <input type="text" id="service_orgs" name="service_orgs">
-        </div>
-        <div class="form-group">
-            <label for="other">Прочее:</label>
-            <textarea id="other" name="other"></textarea>
-        </div>
+        <h2>Основные данные</h2>
+        <label>Населенный пункт:</label>
+        <input type="text" name="locality" placeholder="Введите населенный пункт">
+        <label>Наименование объекта:</label>
+        <input type="text" name="object_name" placeholder="Введите наименование объекта">
+        <label>Адрес объекта:</label>
+        <input type="text" name="object_address" placeholder="Введите адрес объекта">
+        <label>Категория объекта:</label>
+        <input type="text" name="object_category" placeholder="Введите категорию объекта">
+        <!-- Добавьте другие поля по необходимости -->
 
-        <!-- Table 2: Objects on Territory -->
         <div class="table-section">
             <h2>Объекты на территории</h2>
             <div id="objects_on_territory_container">
@@ -192,197 +84,92 @@
             <button type="button" onclick="addRow('objects_on_territory_container')">Добавить объект</button>
         </div>
 
-        <!-- Table 3: Nearby Objects -->
         <div class="table-section">
-            <h2>Объекты рядом</h2>
+            <h2>Соседние объекты</h2>
             <div id="objects_nearby_container">
                 <div class="table-row">
                     <input type="text" name="object_nearby_name[]" placeholder="Наименование объекта">
                     <input type="text" name="object_nearby_details[]" placeholder="Характеристика объекта">
                     <input type="text" name="object_nearby_side[]" placeholder="Сторона расположения">
-                    <input type="text" name="object_nearby_distance[]" placeholder="Расстояние (м)">
+                    <input type="text" name="object_nearby_distance[]" placeholder="Расстояние">
                 </div>
             </div>
             <button type="button" onclick="addRow('objects_nearby_container')">Добавить объект</button>
         </div>
 
-        <!-- Table 4: Transport -->
         <div class="table-section">
-            <h2>Транспортные коммуникации</h2>
+            <h2>Транспортные пути</h2>
             <div id="transport_container">
                 <div class="table-row">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
-                    <input type="text" name="transport_name[]" placeholder="Наименование объекта">
-                    <input type="text" name="transport_distance[]" placeholder="Расстояние (м)">
+                    <input type="text" name="transport_name[]" placeholder="Наименование пути">
+                    <input type="text" name="transport_distance[]" placeholder="Расстояние">
                 </div>
             </div>
-            <button type="button" onclick="addRow('transport_container')">Добавить транспорт</button>
+            <button type="button" onclick="addRow('transport_container')">Добавить путь</button>
         </div>
 
-        <!-- Table 5: Service Organizations -->
         <div class="table-section">
             <h2>Организации обслуживания</h2>
             <div id="service_orgs_container">
                 <div class="table-row">
                     <input type="text" name="service_org_name[]" placeholder="Наименование организации">
                     <input type="text" name="service_org_activity[]" placeholder="Вид деятельности">
-                    <input type="text" name="service_org_schedule[]" placeholder="График работ">
+                    <input type="text" name="service_org_schedule[]" placeholder="График работы">
                 </div>
             </div>
             <button type="button" onclick="addRow('service_orgs_container')">Добавить организацию</button>
         </div>
 
-        <!-- Additional Fields for Other Sections -->
-        <div class="form-group">
-            <label for="workers_info">Сведения о работниках и арендаторах:</label>
-            <textarea id="workers_info" name="workers_info"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="visitors_info">Посещаемость объекта:</label>
-            <textarea id="visitors_info" name="visitors_info"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="tenants_info">Сведения об арендаторах:</label>
-            <textarea id="tenants_info" name="tenants_info"></textarea>
-        </div>
-
-        <!-- Table 7: Dangerous Sections -->
         <div class="table-section">
-            <h2>Потенциально опасные участки</h2>
+            <h2>Опасные участки</h2>
             <div id="dangerous_sections_container">
                 <div class="table-row">
                     <input type="text" name="dangerous_section_name[]" placeholder="Наименование участка">
-                    <input type="text" name="dangerous_section_workers[]" placeholder="Количество человек">
-                    <input type="text" name="dangerous_section_risk[]" placeholder="Характер ЧС">
+                    <input type="text" name="dangerous_section_workers[]" placeholder="Количество работников">
+                    <input type="text" name="dangerous_section_risk[]" placeholder="Характер риска">
                 </div>
             </div>
             <button type="button" onclick="addRow('dangerous_sections_container')">Добавить участок</button>
         </div>
 
-        <div class="form-group">
-            <label for="illegal_actions_a">Возможные противоправные действия (а):</label>
-            <textarea id="illegal_actions_a" name="illegal_actions_a"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="illegal_actions_b">Зафиксированные проявления (б):</label>
-            <textarea id="illegal_actions_b" name="illegal_actions_b"></textarea>
-        </div>
-
-        <!-- Table 9: Socio-Economic Consequences -->
         <div class="table-section">
-            <h2>Оценка последствий террористического акта</h2>
+            <h2>Последствия угроз</h2>
             <div id="consequences_container">
                 <div class="table-row">
-                    <input type="text" name="threat_name[]" placeholder="Террористическая угроза">
-                    <input type="text" name="threat_victims[]" placeholder="Количество пострадавших">
+                    <input type="text" name="threat_name[]" placeholder="Наименование угрозы">
+                    <input type="text" name="threat_victims[]" placeholder="Число пострадавших">
                     <input type="text" name="threat_scale[]" placeholder="Масштаб последствий">
                 </div>
             </div>
             <button type="button" onclick="addRow('consequences_container')">Добавить угрозу</button>
         </div>
 
-        <!-- Table 10: Security Forces -->
-        <div class="form-group">
-            <label for="security_forces_a">Силы и средства (а):</label>
-            <textarea id="security_forces_a" name="security_forces_a"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="security_forces_b">Маршруты патрулей (б):</label>
-            <textarea id="security_forces_b" name="security_forces_b"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="security_forces_c">Стационарные посты (в):</label>
-            <textarea id="security_forces_c" name="security_forces_c"></textarea>
-        </div>
         <div class="table-section">
-            <h2>Состав наряда (г)</h2>
+            <h2>Состав нарядов</h2>
             <div id="patrol_composition_container">
                 <div class="table-row">
                     <input type="text" name="patrol_type[]" placeholder="Вид наряда">
                     <input type="text" name="patrol_units[]" placeholder="Количество единиц">
-                    <input type="text" name="patrol_people[]" placeholder="Количество человек">
+                    <input type="text" name="patrol_people[]" placeholder="Количество людей">
                 </div>
             </div>
             <button type="button" onclick="addRow('patrol_composition_container')">Добавить наряд</button>
         </div>
-        <div class="form-group">
-            <label for="security_forces_d">Народные дружины (д):</label>
-            <textarea id="security_forces_d" name="security_forces_d"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="security_means">Средства охраны (е):</label>
-            <textarea id="security_means" name="security_means"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="notification_system">Организация оповещения и связи:</label>
-            <textarea id="notification_system" name="notification_system"></textarea>
-        </div>
 
-        <!-- Table 11: Engineering and Fire Safety -->
-        <div class="form-group">
-            <label for="engineering_protection">Инженерно-технические средства (а):</label>
-            <textarea id="engineering_protection" name="engineering_protection"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="fire_safety">Пожарная безопасность (б):</label>
-            <textarea id="fire_safety" name="fire_safety"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="evacuation_system">Система оповещения и эвакуации (в):</label>
-            <textarea id="evacuation_system" name="evacuation_system"></textarea>
-        </div>
-
-        <!-- Table 12: Critical Elements Protection -->
         <div class="table-section">
-            <h2>Оценка защиты критических элементов</h2>
+            <h2>Критические элементы</h2>
             <div id="critical_elements_container">
                 <div class="table-row">
                     <input type="text" name="critical_element_name[]" placeholder="Наименование элемента">
-                    <input type="text" name="critical_element_requirements[]" placeholder="Выполнение требований">
+                    <input type="text" name="critical_element_requirements[]" placeholder="Требования">
                     <input type="text" name="critical_element_physical_protection[]" placeholder="Физическая защита">
-                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение акта">
+                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Меры предотвращения">
                     <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность мер">
                     <input type="text" name="critical_element_compensation[]" placeholder="Компенсационные меры">
                 </div>
             </div>
             <button type="button" onclick="addRow('critical_elements_container')">Добавить элемент</button>
-        </div>
-
-        <div class="form-group">
-            <label for="security_reliability_a">Надежность охраны (а):</label>
-            <textarea id="security_reliability_a" name="security_reliability_a"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="security_reliability_b">Мероприятия по защите (б):</label>
-            <textarea id="security_reliability_b" name="security_reliability_b"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="security_reliability_c">Финансирование (в):</label>
-            <textarea id="security_reliability_c" name="security_reliability_c"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="additional_info">Дополнительная информация:</label>
-            <textarea id="additional_info" name="additional_info"></textarea>
-        </div>
-        <div class="form-group">
-            <label for="owner">Правообладатель:</label>
-            <input type="text" id="owner" name="owner">
-        </div>
-        <div class="form-group">
-            <label for="owner_signature">Подпись правообладателя:</label>
-            <input type="text" id="owner_signature" name="owner_signature">
-        </div>
-        <div class="form-group">
-            <label for="owner_name">Ф.И.О. правообладателя:</label>
-            <input type="text" id="owner_name" name="owner_name">
-        </div>
-        <div class="form-group">
-            <label for="creation_date">Дата составления:</label>
-            <input type="text" id="creation_date" name="creation_date">
-        </div>
-        <div class="form-group">
-            <label for="update_date">Дата актуализации:</label>
-            <input type="text" id="update_date" name="update_date">
         </div>
 
         <button type="submit">Сгенерировать паспорт</button>
