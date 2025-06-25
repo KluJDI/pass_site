@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
@@ -81,11 +82,16 @@ def generate():
         logger.debug(f"Данные формы (поля): {fields}")
         logger.debug(f"Данные формы (таблицы): {table_fields}")
 
-        # Проверка, что данные для таблиц не пустые
+        # Проверка данных таблиц
         for table_name, data in table_fields.items():
-            if not data[list(data.keys())[0]]:
+            lengths = {key: len(values) for key, values in data.items()}
+            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
+            if not any(data.values()):
                 logger.warning(f"Данные для таблицы {table_name} пустые, заполняем пустыми значениями")
                 table_fields[table_name] = {key: [''] for key in data.keys()}
+            elif not all(len(values) == len(data[list(data.keys())[0]]) for values in data.values()):
+                logger.error(f"Несоответствие длины данных в таблице {table_name}: {lengths}")
+                return f"Ошибка: Несоответствие количества данных в таблице {table_name}", 400
 
         # Загружаем шаблон
         doc = Document(template_path)
@@ -138,9 +144,10 @@ def generate():
                     row = table.add_row()
                     row.cells[0].text = str(i + 1)  # Номер строки
                     for j, key in enumerate(field_data.keys()):
-                        if j < column_count and i < len(field_data[key]):
-                            row.cells[j + 1].text = field_data[key][i] or ''
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j+1}: {field_data[key][i]}")
+                        if j < column_count:
+                            value = field_data[key][i] if i < len(field_data[key]) else ''
+                            row.cells[j + 1].text = value
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j+1}: {value}")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
@@ -166,8 +173,6 @@ def generate():
     except Exception as e:
         logger.error(f"Ошибка при генерации документа: {str(e)}")
         return f"Ошибка при генерации документа: {str(e)}", 500
-
-import os
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
