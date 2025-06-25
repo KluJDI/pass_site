@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
@@ -81,6 +82,12 @@ def generate():
         logger.debug(f"Данные формы (поля): {fields}")
         logger.debug(f"Данные формы (таблицы): {table_fields}")
 
+        # Проверка, что данные для таблиц не пустые
+        for table_name, data in table_fields.items():
+            if not data[list(data.keys())[0]]:
+                logger.warning(f"Данные для таблицы {table_name} пустые, пропускаем")
+                table_fields[table_name] = {key: [''] for key in data.keys()}  # Заполняем пустыми значениями
+
         # Загружаем шаблон
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
@@ -90,7 +97,6 @@ def generate():
             for para in paragraphs:
                 original_text = para.text
                 for key, val in fields.items():
-                    # Заменяем подчеркивания
                     para.text = re.sub(r'_+', val or '', para.text, count=1)
                 if para.text != original_text:
                     logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}'")
@@ -107,24 +113,35 @@ def generate():
         # Обновление таблиц
         def update_table(table_index, field_data, column_count):
             try:
+                if table_index >= len(doc.tables):
+                    logger.error(f"Таблица с индексом {table_index} не найдена в документе")
+                    return
                 table = doc.tables[table_index]
-                logger.info(f"Обновление таблицы {table_index}, столбцов: {column_count}")
+                logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {column_count + 1}")
+
+                # Проверка количества столбцов
+                if len(table.rows[0].cells) < column_count + 1:
+                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells)} столбцов, ожидается {column_count + 1}")
+                    return
+
                 # Очищаем строки, кроме заголовка
                 if len(table.rows) > 1:
                     for _ in range(len(table.rows) - 1):
                         table._element.remove(table.rows[-1]._element)
+
                 # Добавляем новые строки
                 row_count = len(field_data[list(field_data.keys())[0]])
+                if row_count == 0:
+                    logger.info(f"Нет данных для таблицы {table_index}, оставляем пустой")
+                    return
+
                 for i in range(row_count):
                     row = table.add_row()
                     row.cells[0].text = str(i + 1)  # Номер строки
                     for j, key in enumerate(field_data.keys()):
-                        if i < len(field_data[key]):
+                        if j < column_count and i < len(field_data[key]):
                             row.cells[j + 1].text = field_data[key][i] or ''
                             logger.debug(f"Таблица {table_index}, строка {i}, столбец {j+1}: {field_data[key][i]}")
-            except IndexError:
-                logger.error(f"Ошибка: Таблица {table_index} не найдена или имеет неверную структуру")
-                raise
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
