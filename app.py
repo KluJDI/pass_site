@@ -1,6 +1,5 @@
 from flask import Flask, request, send_file, render_template
 from docx import Document
-from docx.oxml.ns import qn
 import io
 import re
 import os
@@ -21,7 +20,7 @@ def form():
 def generate():
     try:
         # Путь к шаблону
-        template_path = os.path.join(os.path.dirname(__file__), "pasport_mesta_massovogo_prebuvaniya_lyudei_new.docx")
+        template_path = os.path.join(os.path.dirname(__file__), "pasport_mesta_massovogo_prebuvaniya_lyudei.docx")
         logger.info(f"Проверка шаблона по пути: {template_path}")
 
         if not os.path.exists(template_path):
@@ -159,7 +158,7 @@ def generate():
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы
+        # Функция обновления таблицы (упрощённая, как было изначально)
         def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
@@ -207,7 +206,7 @@ def generate():
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
-        # Обновляем таблицы с ожидаемым количеством столбцов (без учета номера)
+        # Обновляем таблицы (как было изначально, с минимальными изменениями)
         update_table(0, table_fields['objects_on_territory'], 4)
         update_table(1, table_fields['objects_nearby'], 4)
         update_table(2, table_fields['transport'], 3)
