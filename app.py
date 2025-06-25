@@ -49,6 +49,7 @@ def generate():
             'technical_security_a', 'fire_safety_b', 'evacuation_system_v',
             'security_reliability_a', 'urgent_measures_b', 'funding_v',
             'additional_info',
+            'recreation_areas', 'communication_schemes', 'evacuation_instructions', 'correction_log',
             'rights_holder', 'rights_holder_name', 'creation_date', 'update_date'
         ]
 
@@ -103,7 +104,8 @@ def generate():
         }
 
         logger.debug(f"Данные формы (текстовые поля): {fields}")
-        logger.debug(f"Данные формы (таблицы): {table_fields}")
+        for table_name, data in table_fields.items():
+            logger.debug(f"Данные формы (таблица {table_name}): {data}")
 
         # Проверка данных таблиц
         for table_name, data in table_fields.items():
@@ -172,18 +174,17 @@ def generate():
                 if len(table.rows) > 1:
                     for _ in range(len(table.rows) - 1):
                         table._element.remove(table.rows[-1]._element)
+                        logger.debug(f"Удалена строка в таблице {table_index}")
 
                 # Добавляем новые строки
                 row_count = len(field_data[list(field_data.keys())[0]])
-                if row_count == 0:
-                    logger.info(f"Нет данных для таблицы {table_index}, оставляем пустой")
-                    return
-
+                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
                 for i in range(row_count):
                     row = table.add_row()
                     cell_offset = 1 if has_number_column else 0
                     if has_number_column:
                         row.cells[0].text = str(i + 1)  # Номер строки
+                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
                     for j, key in enumerate(field_data.keys()):
                         if j < column_count:
                             value = field_data[key][i] if i < len(field_data[key]) else ''
