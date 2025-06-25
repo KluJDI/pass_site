@@ -149,6 +149,17 @@ def generate():
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
+        # Функция для добавления столбцов в таблицу
+        def add_columns_to_table(table, required_columns):
+            current_columns = len(table.rows[0].cells) if table.rows else 0
+            if current_columns < required_columns:
+                logger.info(f"Добавляем {required_columns - current_columns} столбцов в таблицу")
+                for row in table.rows:
+                    for _ in range(required_columns - current_columns):
+                        table.add_column()
+                logger.debug(f"Новая структура таблицы: {len(table.rows[0].cells)} столбцов")
+            return table
+
         # Функция обновления таблицы
         def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
@@ -160,6 +171,12 @@ def generate():
                 actual_columns = len(table.rows[0].cells) if table.rows else 0
                 expected_columns = expected_column_count + (1 if has_number_column else 0)
                 logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_columns}")
+
+                # Добавляем недостающие столбцы
+                if actual_columns < expected_columns:
+                    logger.warning(f"Таблица {table_index} имеет {actual_columns} столбцов, ожидается {expected_columns}. Добавляем столбцы.")
+                    table = add_columns_to_table(table, expected_columns)
+                    actual_columns = len(table.rows[0].cells) if table.rows else 0
 
                 # Используем фактическое количество столбцов
                 column_count = actual_columns - (1 if has_number_column else 0)
