@@ -86,7 +86,7 @@
 </head>
 <body>
     <h1>Заполнение паспорта безопасности</h1>
-    <form action="/generate" method="POST">
+    <form id="passportForm" action="/generate" method="POST">
         <h2>Общие данные</h2>
         <label>Гриф или пометка:</label>
         <input type="text" name="security_classification" placeholder="Введите гриф или пометку">
@@ -375,10 +375,26 @@
     <script>
         function addRow(tableId) {
             const table = document.getElementById(tableId);
-            const row = table.children[0].cloneNode(true);
-            row.querySelectorAll('input').forEach(input => input.value = '');
-            table.appendChild(row);
+            const templateRow = table.querySelector('.table-row');
+            const newRow = templateRow.cloneNode(true);
+            newRow.querySelectorAll('input').forEach(input => {
+                input.value = '';
+                // Убедимся, что имена полей содержат []
+                if (!input.name.endsWith('[]')) {
+                    input.name = input.name + '[]';
+                }
+            });
+            table.appendChild(newRow);
         }
+
+        // Добавляем обработчик отправки формы для дебага
+        document.getElementById('passportForm').addEventListener('submit', function(e) {
+            const formData = new FormData(this);
+            console.log('Отправляемые данные формы:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+        });
     </script>
 </body>
 </html>
