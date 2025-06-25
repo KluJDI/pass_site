@@ -122,21 +122,23 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Логирование структуры таблиц и проверка объединённых ячеек
+        # Логирование структуры таблиц с детальной отладкой
         for i, table in enumerate(doc.tables):
-            if table.rows:
+            if table.rows and table.rows[0].cells:
                 columns = len(table.rows[0].cells)
                 headers = []
-                for cell in table.rows[0].cells:
+                for j, cell in enumerate(table.rows[0].cells):
                     text = cell.text.strip()
-                    # Проверка объединённых ячеек
                     cell_element = cell._element
                     grid_span = cell_element.get(qn('w:gridSpan'))
-                    if grid_span:
-                        headers.append(f"{text} (gridSpan={grid_span})")
-                    else:
-                        headers.append(text)
+                    v_merge = cell_element.get(qn('w:vMerge'))
+                    h_merge = cell_element.get(qn('w:hMerge'))
+                    headers.append(f"{text} (col={j}, gridSpan={grid_span or 1}, vMerge={vMerge or 'none'}, hMerge={h_merge or 'none'})")
                 logger.info(f"Таблица {i}: {columns} столбцов, заголовки: {headers}")
+                # Проверка содержимого ячеек для отладки
+                for row in table.rows[1:]:
+                    row_data = [cell.text.strip() for cell in row.cells]
+                    logger.debug(f"Таблица {i}, строка {table.rows.index(row)}: {row_data}")
             else:
                 logger.warning(f"Таблица {i} пустая или без строк")
 
@@ -168,7 +170,7 @@ def generate():
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы
+        # Функция обновления таблицы с обработкой объединённых ячеек
         def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
@@ -177,22 +179,15 @@ def generate():
 
                 table = doc.tables[table_index]
                 actual_columns = len(table.rows[0].cells) if table.rows else 0
-                expected_columns = expected_column_count + (1 if has_number_column else 0)
-                logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_columns}")
+                logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_column_count + (1 if has_number_column else 0)}")
 
-                # Проверка объединённых ячеек в первой строке
+                # Проверка объединённых ячеек
                 effective_columns = actual_columns
                 for cell in table.rows[0].cells:
                     grid_span = cell._element.get(qn('w:gridSpan'))
                     if grid_span:
                         effective_columns += int(grid_span) - 1
                 logger.info(f"Таблица {table_index}, эффективное количество столбцов (с учётом gridSpan): {effective_columns}")
-
-                # Используем минимальное количество столбцов
-                column_count = min(actual_columns - (1 if has_number_column else 0), expected_column_count)
-                if column_count < 0:
-                    logger.error(f"Таблица {table_index} имеет некорректное количество столбцов: {actual_columns}")
-                    return
 
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
@@ -201,7 +196,7 @@ def generate():
 
                 # Добавляем строки
                 row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
-                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
+                logger.debug(f"Добавление {row_count} строк в таблице {table_index}")
                 if row_count == 0:
                     logger.warning(f"Нет данных для таблицы {table_index}, добавляем пустую строку")
                     row = table.add_row()
@@ -219,12 +214,13 @@ def generate():
                         row.cells[0].text = str(i + 1)
                         logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
                     for j, key in enumerate(field_data.keys()):
-                        if j < column_count and j + cell_offset < len(row.cells):
+                        target_column = j + cell_offset
+                        if target_column < actual_columns:
                             value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                            row.cells[j + cell_offset].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
-                        elif j + cell_offset >= len(row.cells):
-                            logger.warning(f"Пропущен столбец {j + cell_offset} в таблице {table_index}, так как он превышает количество столбцов в шаблоне")
+                            row.cells[target_column].text = value
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {target_column}: {value} (ключ: {key})")
+                        else:
+                            logger.warning(f"Пропущен столбец {target_column} в таблице {table_index}, так как он превышает количество столбцов в шаблоне")
 
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
