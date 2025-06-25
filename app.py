@@ -105,13 +105,16 @@ def generate():
         logger.debug(f"Данные формы (текстовые поля): {fields}")
         for table_name, data in table_fields.items():
             logger.debug(f"Данные формы (таблица {table_name}): {data}")
+            lengths = {key: len(values) for key, values in data.items()}
+            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
 
         # Проверка данных таблиц
         for table_name, data in table_fields.items():
-            lengths = {key: len(values) for key, values in data.items()}
-            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
-            if not all(len(values) == len(data[list(data.keys())[0]]) for values in data.values()):
-                logger.error(f"Несоответствие длины данных в таблице {table_name}: {lengths}")
+            if not any(data[key] for key in data):
+                logger.warning(f"Таблица {table_name} пустая")
+                table_fields[table_name] = {key: [''] for key in data}
+            elif not all(len(data[key]) == len(data[list(data.keys())[0]]) for key in data):
+                logger.error(f"Несоответствие длины данных в таблице {table_name}")
                 return f"Ошибка: Несоответствие количества данных в таблице {table_name}", 400
 
         # Загружаем шаблон
@@ -127,8 +130,8 @@ def generate():
                     if placeholder_index < len(text_fields_order):
                         key = text_fields_order[placeholder_index]
                         value = fields.get(key, '')
-                        para.text = re.sub(r'_+', value, para.text, count=1)
-                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
+                        para.text = re.sub(r'_+', value, para.text)
+                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
                         placeholder_index += 1
             for table in doc.tables:
                 for row in table.rows:
@@ -139,46 +142,54 @@ def generate():
                                 if placeholder_index < len(text_fields_order):
                                     key = text_fields_order[placeholder_index]
                                     value = fields.get(key, '')
-                                    para.text = re.sub(r'_+', value, para.text, count=1)
-                                    logger.debug(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
+                                    para.text = re.sub(r'_+', value, para.text)
+                                    logger.debug(f"Таблица: замена '{original_text}' -> '{para.text}' (ключ: {key})")
                                     placeholder_index += 1
 
-        # Замена текстовых заполнителей
+        # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблиц
+        # Функция обновления таблицы
         def update_table(table_index, field_data, column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена")
-                    return
-                table = doc.tables[table_index]
-                expected_columns = column_count + (1 if has_number_column else 0)
-                logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
+                return
 
-                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
-                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
-                    return
+            table = doc.tables[table_index]
+            expected_columns = column_count + (1 if has_number_column else 0)
+            logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
 
-                # Очищаем строки, кроме заголовка
-                while len(table.rows) > 1:
-                    table._element.remove(table.rows[-1]._element)
-                    logger.debug(f"Удалена строка в таблице {table_index}")
+            if len(table.rows) or len(table_rows[0].cells) != expected_columns:
+                logger.error(f"Таблица {table_index} имеет {len(table_rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
+                return f"Ошибка: Неправильное количество столбцов в таблице {table_index}", 400
 
-                # Добавляем строки
-                row_count = max(len(field_data[key]) for key in field_data)
-                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
-                for i in range(row_count):
-                    row = table.add_row()
-                    cell_offset = 1 if has_number_column else 0
-                    if has_number_column:
-                        row.cells[0].text = str(i + 1)
-                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
-                    for j, key in enumerate(field_data.keys()):
-                        if j < column_count:
-                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                            row.cells[j + cell_offset].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
+            # Очищаем строки, кроме заголовка
+            while len(table_rows) > 1:
+                table._element.remove(table_rows[-1]._element)
+                logger.debug(f"Удалена строка в таблице {table_index}")
+
+            # Добавляем строки
+            row_count = max(len(field_data[key]) for key in field_data) if any(field_data[key] for key in field_data) else 0
+            logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
+            if row_count == 0:
+                logger.warning(f"Нет данных для таблицы {table_index}, добавляем пустую строку")
+                row = table.add_row()
+                for cell in row.cells:
+                    cell.text = ''
+                return
+
+            for i in range(row_count):
+                row = table.add_row()
+                cell_offset = 1 if has_number_column else 0
+                if has_number_column:
+                    row.cells[0].text = str(i + 1)
+                    logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
+                for j, key in enumerate(field_data.keys()):
+                    if j < column_count:
+                        value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
+                        row.cells[j + cell_offset].text = value
+                        logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
