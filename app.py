@@ -115,17 +115,18 @@ def generate():
                     replace_placeholders(cell.paragraphs)
 
         # Обновление таблиц
-        def update_table(table_index, field_data, column_count):
+        def update_table(table_index, field_data, column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена в документе")
                     return
                 table = doc.tables[table_index]
-                logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {column_count + 1}")
+                logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {column_count + (1 if has_number_column else 0)}")
 
                 # Проверка количества столбцов
-                if len(table.rows) == 0 or len(table.rows[0].cells) < column_count + 1:
-                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {column_count + 1}")
+                expected_columns = column_count + (1 if has_number_column else 0)
+                if len(table.rows) == 0 or len(table.rows[0].cells) < expected_columns:
+                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
                     return
 
                 # Очищаем строки, кроме заголовка
@@ -141,12 +142,14 @@ def generate():
 
                 for i in range(row_count):
                     row = table.add_row()
-                    row.cells[0].text = str(i + 1)  # Номер строки
+                    cell_offset = 1 if has_number_column else 0
+                    if has_number_column:
+                        row.cells[0].text = str(i + 1)  # Номер строки
                     for j, key in enumerate(field_data.keys()):
                         if j < column_count:
                             value = field_data[key][i] if i < len(field_data[key]) else ''
-                            row.cells[j + 1].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j+1}: {value}")
+                            row.cells[j + cell_offset].text = value
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value}")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
@@ -158,7 +161,7 @@ def generate():
         update_table(3, table_fields['service_orgs'], 3)  # Таблица 5
         update_table(4, table_fields['dangerous_sections'], 3)  # Таблица 7
         update_table(5, table_fields['consequences'], 3)  # Таблица 9
-        update_table(6, table_fields['patrol_composition'], 3)  # Таблица 10г
+        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)  # Таблица 10г (без N п/п)
         update_table(7, table_fields['critical_elements'], 6)  # Таблица 12
 
         # Сохраняем документ
