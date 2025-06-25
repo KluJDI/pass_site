@@ -61,126 +61,217 @@
     <h1>Заполнение паспорта безопасности</h1>
     <form action="/generate" method="POST">
         <h2>Основные данные</h2>
+        <label>Гриф или пометка:</label>
+        <input type="text" name="security_classification" placeholder="Введите гриф">
+        <label>Номер экземпляра:</label>
+        <input type="text" name="copy_number" placeholder="Введите номер экземпляра">
+        <label>Руководитель исполнительного органа:</label>
+        <input type="text" name="executive_authority_head" placeholder="Введите должность">
+        <label>Ф.И.О. руководителя:</label>
+        <input type="text" name="executive_authority_name" placeholder="Введите Ф.И.О.">
+        <label>Дата утверждения:</label>
+        <input type="text" name="approval_date" placeholder="ДД.ММ.ГГГГ">
+        <label>Руководитель органа безопасности:</label>
+        <input type="text" name="security_agency_head" placeholder="Введите должность">
+        <label>Ф.И.О. органа безопасности:</label>
+        <input type="text" name="security_agency_name" placeholder="Введите Ф.И.О.">
+        <label>Дата согласования (безопасность):</label>
+        <input type="text" name="security_agency_date" placeholder="ДД.ММ.ГГГГ">
+        <label>Руководитель органа МВД:</label>
+        <input type="text" name="mvd_head" placeholder="Введите должность">
+        <label>Ф.И.О. органа МВД:</label>
+        <input type="text" name="mvd_name" placeholder="Введите Ф.И.О.">
+        <label>Дата согласования (МВД):</label>
+        <input type="text" name="mvd_date" placeholder="ДД.ММ.ГГГГ">
+        <label>Руководитель органа МЧС:</label>
+        <input type="text" name="mchs_head" placeholder="Введите должность">
+        <label>Ф.И.О. органа МЧС:</label>
+        <input type="text" name="mchs_name" placeholder="Введите Ф.И.О.">
+        <label>Дата согласования (МЧС):</label>
+        <input type="text" name="mchs_date" placeholder="ДД.ММ.ГГГГ">
+        <label>Руководитель Росгвардии:</label>
+        <input type="text" name="rosgvardia_head" placeholder="Введите должность">
+        <label>Ф.И.О. Росгвардии:</label>
+        <input type="text" name="rosgvardia_name" placeholder="Введите Ф.И.О.">
+        <label>Дата согласования (Росгвардия):</label>
+        <input type="text" name="rosgvardia_date" placeholder="ДД.ММ.ГГГГ">
         <label>Населенный пункт:</label>
-        <input type="text" name="locality" placeholder="Введите населенный пункт">
+        <input type="text" name="locality" placeholder="Введите название">
         <label>Наименование объекта:</label>
-        <input type="text" name="object_name" placeholder="Введите наименование объекта">
+        <input type="text" name="object_name" placeholder="Введите наименование">
         <label>Адрес объекта:</label>
-        <input type="text" name="object_address" placeholder="Введите адрес объекта">
+        <input type="text" name="object_address" placeholder="Введите адрес">
+        <label>Принадлежность и назначение:</label>
+        <textarea name="object_affiliation" placeholder="Введите описание"></textarea>
+        <label>Границы объекта:</label>
+        <textarea name="object_boundaries" placeholder="Введите границы"></textarea>
+        <label>Площадь и периметр:</label>
+        <input type="text" name="object_area_perimeter" placeholder="Введите площадь и периметр">
+        <label>Результаты мониторинга:</label>
+        <textarea name="monitoring_results" placeholder="Введите данные"></textarea>
         <label>Категория объекта:</label>
-        <input type="text" name="object_category" placeholder="Введите категорию объекта">
-        <!-- Добавьте другие поля по необходимости -->
+        <input type="text" name="object_category" placeholder="Введите категорию">
+        <label>Территориальный орган МВД:</label>
+        <textarea name="mvd_territory" placeholder="Введите данные"></textarea>
+        <label>Общественные объединения:</label>
+        <textarea name="public_organizations" placeholder="Введите данные"></textarea>
+        <label>Характеристика местности:</label>
+        <textarea name="terrain_characteristics" placeholder="Введите описание"></textarea>
+        <label>Численность работников:</label>
+        <input type="text" name="staff_count" placeholder="Введите число">
+        <label>Посещаемость:</label>
+        <textarea name="attendance" placeholder="Введите данные"></textarea>
+        <label>Сведения об арендаторах:</label>
+        <textarea name="tenants_info" placeholder="Введите данные"></textarea>
+        <label>Противоправные действия:</label>
+        <textarea name="illegal_actions_a" placeholder="Введите описание"></textarea>
+        <label>Диверсионные проявления:</label>
+        <textarea name="diversion_manifestations_b" placeholder="Введите данные"></textarea>
+        <label>Силы и средства охраны:</label>
+        <textarea name="security_forces_a" placeholder="Введите данные"></textarea>
+        <label>Маршруты патрулей:</label>
+        <textarea name="patrol_routes_b" placeholder="Введите данные"></textarea>
+        <label>Стационарные посты:</label>
+        <textarea name="stationary_posts_b" placeholder="Введите данные"></textarea>
+        <label>Народные дружины:</label>
+        <textarea name="public_guards_d" placeholder="Введите данные"></textarea>
+        <label>Средства охраны:</label>
+        <textarea name="security_equipment_e" placeholder="Введите данные"></textarea>
+        <label>Организация оповещения:</label>
+        <textarea name="notification_system_zh" placeholder="Введите данные"></textarea>
+        <label>Инженерно-технические средства:</label>
+        <textarea name="technical_security_a" placeholder="Введите данные"></textarea>
+        <label>Пожарная безопасность:</label>
+        <textarea name="fire_safety_b" placeholder="Введите данные"></textarea>
+        <label>Система оповещения и эвакуации:</label>
+        <textarea name="evacuation_system_v" placeholder="Введите данные"></textarea>
+        <label>Выводы о надежности охраны:</label>
+        <textarea name="security_reliability_a" placeholder="Введите выводы"></textarea>
+        <label>Первоочередные мероприятия:</label>
+        <textarea name="urgent_measures_b" placeholder="Введите мероприятия"></textarea>
+        <label>Финансирование:</label>
+        <textarea name="funding_v" placeholder="Введите данные"></textarea>
+        <label>Дополнительная информация:</label>
+        <textarea name="additional_info" placeholder="Введите данные"></textarea>
+        <label>Правообладатель:</label>
+        <input type="text" name="rights_holder" placeholder="Введите данные">
+        <label>Ф.И.О. правообладателя:</label>
+        <input type="text" name="rights_holder_name" placeholder="Введите Ф.И.О.">
+        <label>Дата составления:</label>
+        <input type="text" name="creation_date" placeholder="ДД.ММ.ГГГГ">
+        <label>Дата актуализации:</label>
+        <input type="text" name="update_date" placeholder="ДД.ММ.ГГГГ">
 
         <div class="table-section">
             <h2>Объекты на территории</h2>
-            <div id="objects_on_territory_container">
+            <div id="objects_on_territory">
                 <div class="table-row">
                     <input type="text" name="object_on_territory_name[]" placeholder="Наименование объекта">
                     <input type="text" name="object_on_territory_details[]" placeholder="Характеристика объекта">
-                    <input type="text" name="object_on_territory_location[]" placeholder="Место расположения">
-                    <input type="text" name="object_on_territory_security[]" placeholder="Сведения о защите">
+                    <input type="text" name="object_on_territory_location[]" placeholder="Место">
+                    <input type="text" name="object_on_territory_security[]" placeholder="Защита">
                 </div>
             </div>
-            <button type="button" onclick="addRow('objects_on_territory_container')">Добавить объект</button>
+            <button type="button" onclick="addRow('objects_on_territory')">Добавить объект</button>
         </div>
 
         <div class="table-section">
             <h2>Соседние объекты</h2>
-            <div id="objects_nearby_container">
+            <div id="objects_nearby">
                 <div class="table-row">
                     <input type="text" name="object_nearby_name[]" placeholder="Наименование объекта">
                     <input type="text" name="object_nearby_details[]" placeholder="Характеристика объекта">
-                    <input type="text" name="object_nearby_side[]" placeholder="Сторона расположения">
+                    <input type="text" name="object_nearby_side[]" placeholder="Сторона">
                     <input type="text" name="object_nearby_distance[]" placeholder="Расстояние">
                 </div>
             </div>
-            <button type="button" onclick="addRow('objects_nearby_container')">Добавить объект</button>
+            <button type="button" onclick="addRow('objects_nearby')">Добавить объект</button>
         </div>
 
         <div class="table-section">
-            <h2>Транспортные пути</h2>
-            <div id="transport_container">
+            <h2>Транспортные коммуникации</h2>
+            <div id="transport">
                 <div class="table-row">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
-                    <input type="text" name="transport_name[]" placeholder="Наименование пути">
+                    <input type="text" name="transport_name[]" placeholder="Наименование">
                     <input type="text" name="transport_distance[]" placeholder="Расстояние">
                 </div>
             </div>
-            <button type="button" onclick="addRow('transport_container')">Добавить путь</button>
+            <button type="button" onclick="addRow('transport')">Добавить путь</button>
         </div>
 
         <div class="table-section">
             <h2>Организации обслуживания</h2>
-            <div id="service_orgs_container">
+            <div id="service_orgs">
                 <div class="table-row">
-                    <input type="text" name="service_org_name[]" placeholder="Наименование организации">
+                    <input type="text" name="service_org_name[]" placeholder="Наименование">
                     <input type="text" name="service_org_activity[]" placeholder="Вид деятельности">
-                    <input type="text" name="service_org_schedule[]" placeholder="График работы">
+                    <input type="text" name="service_org_schedule[]" placeholder="График">
                 </div>
             </div>
-            <button type="button" onclick="addRow('service_orgs_container')">Добавить организацию</button>
+            <button type="button" onclick="addRow('service_orgs')">Добавить организацию</button>
         </div>
 
         <div class="table-section">
             <h2>Опасные участки</h2>
-            <div id="dangerous_sections_container">
+            <div id="dangerous_sections">
                 <div class="table-row">
-                    <input type="text" name="dangerous_section_name[]" placeholder="Наименование участка">
-                    <input type="text" name="dangerous_section_workers[]" placeholder="Количество работников">
-                    <input type="text" name="dangerous_section_risk[]" placeholder="Характер риска">
+                    <input type="text" name="dangerous_section_name[]" placeholder="Наименование">
+                    <input type="text" name="dangerous_section_workers[]" placeholder="Работники">
+                    <input type="text" name="dangerous_section_risk[]" placeholder="Риск">
                 </div>
             </div>
-            <button type="button" onclick="addRow('dangerous_sections_container')">Добавить участок</button>
+            <button type="button" onclick="addRow('dangerous_sections')">Добавить участок</button>
         </div>
 
         <div class="table-section">
             <h2>Последствия угроз</h2>
-            <div id="consequences_container">
+            <div id="consequences">
                 <div class="table-row">
-                    <input type="text" name="threat_name[]" placeholder="Наименование угрозы">
-                    <input type="text" name="threat_victims[]" placeholder="Число пострадавших">
-                    <input type="text" name="threat_scale[]" placeholder="Масштаб последствий">
+                    <input type="text" name="threat_name[]" placeholder="Угроза">
+                    <input type="text" name="threat_victims[]" placeholder="Пострадавшие">
+                    <input type="text" name="threat_scale[]" placeholder="Масштаб">
                 </div>
             </div>
-            <button type="button" onclick="addRow('consequences_container')">Добавить угрозу</button>
+            <button type="button" onclick="addRow('consequences')">Добавить угрозу</button>
         </div>
 
         <div class="table-section">
             <h2>Состав нарядов</h2>
-            <div id="patrol_composition_container">
+            <div id="patrol_composition">
                 <div class="table-row">
-                    <input type="text" name="patrol_type[]" placeholder="Вид наряда">
-                    <input type="text" name="patrol_units[]" placeholder="Количество единиц">
-                    <input type="text" name="patrol_people[]" placeholder="Количество людей">
+                    <input type="text" name="patrol_type[]" placeholder="Тип наряда">
+                    <input type="text" name="patrol_units[]" placeholder="Единицы">
+                    <input type="text" name="patrol_people[]" placeholder="Люди">
                 </div>
             </div>
-            <button type="button" onclick="addRow('patrol_composition_container')">Добавить наряд</button>
+            <button type="button" onclick="addRow('patrol_composition')">Добавить наряд</button>
         </div>
 
         <div class="table-section">
             <h2>Критические элементы</h2>
-            <div id="critical_elements_container">
+            <div id="critical_elements">
                 <div class="table-row">
-                    <input type="text" name="critical_element_name[]" placeholder="Наименование элемента">
+                    <input type="text" name="critical_element_name[]" placeholder="Название">
                     <input type="text" name="critical_element_requirements[]" placeholder="Требования">
                     <input type="text" name="critical_element_physical_protection[]" placeholder="Физическая защита">
-                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Меры предотвращения">
-                    <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность мер">
-                    <input type="text" name="critical_element_compensation[]" placeholder="Компенсационные меры">
+                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение">
+                    <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность">
+                    <input type="text" name="critical_element_compensation[]" placeholder="Компенсация">
                 </div>
             </div>
-            <button type="button" onclick="addRow('critical_elements_container')">Добавить элемент</button>
+            <button type="button" onclick="addRow('critical_elements')">Добавить элемент</button>
         </div>
 
         <button type="submit">Сгенерировать паспорт</button>
     </form>
 
     <script>
-        function addRow(containerId) {
-            const container = document.getElementById(containerId);
-            const newRow = container.children[0].cloneNode(true);
-            newRow.querySelectorAll('input').forEach(input => input.value = '');
-            container.appendChild(newRow);
+        function addRow(tableId) {
+            const table = document.getElementById(tableId);
+            const row = table.children[0].cloneNode(true);
+            row.querySelectorAll('input').forEach(input => input.value = '');
+            table.appendChild(row);
         }
     </script>
 </body>
