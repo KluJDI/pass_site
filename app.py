@@ -8,7 +8,7 @@ import logging
 app = Flask(__name__)
 
 # Настройка логирования
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.route('/')
@@ -28,8 +28,32 @@ def generate():
             logger.error(f"Шаблон {template_path} не найден")
             return "Ошибка: Шаблон документа не найден", 500
 
+        # Определяем порядок текстовых полей для замены
+        text_fields_order = [
+            'security_classification', 'copy_number',
+            'executive_authority_head', 'executive_authority_name', 'approval_date',
+            'security_agency_head', 'security_agency_name', 'security_agency_date',
+            'mvd_head', 'mvd_name', 'mvd_date',
+            'mchs_head', 'mchs_name', 'mchs_date',
+            'rosgvardia_head', 'rosgvardia_name', 'rosgvardia_date',
+            'locality',
+            'object_name', 'object_address', 'object_affiliation', 'object_boundaries',
+            'object_area_perimeter', 'monitoring_results', 'object_category',
+            'mvd_territory', 'public_organizations', 'terrain_characteristics',
+            'staff_count', 'attendance', 'tenants_info',
+            'illegal_actions_a', 'diversion_manifestations_b',
+            'security_forces_a', 'patrol_routes_b', 'stationary_posts_b',
+            'public_guards_d', 'security_equipment_e',
+            'notification_system_zh', 'notification_system_zh_2', 'notification_system_zh_3',
+            'notification_system_zh_4', 'notification_system_zh_5', 'notification_system_zh_6',
+            'technical_security_a', 'fire_safety_b', 'evacuation_system_v',
+            'security_reliability_a', 'urgent_measures_b', 'funding_v',
+            'additional_info',
+            'rights_holder', 'rights_holder_name', 'creation_date', 'update_date'
+        ]
+
         # Собираем данные из формы
-        fields = {key: value for key, value in request.form.items() if not key.endswith('[]')}
+        fields = {key: request.form.get(key, '') for key in text_fields_order}
         table_fields = {
             'objects_on_territory': {
                 'name': request.form.getlist('object_on_territory_name[]'),
@@ -78,7 +102,7 @@ def generate():
             }
         }
 
-        logger.debug(f"Данные формы (поля): {fields}")
+        logger.debug(f"Данные формы (текстовые поля): {fields}")
         logger.debug(f"Данные формы (таблицы): {table_fields}")
 
         # Проверка данных таблиц
@@ -96,25 +120,40 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены заполнителей
-        def replace_placeholders(paragraphs):
-            for para in paragraphs:
+        # Функция замены текстовых заполнителей
+        def replace_placeholders(doc, fields):
+            placeholder_index = 0
+            for para in doc.paragraphs:
                 original_text = para.text
-                for key, val in fields.items():
-                    para.text = re.sub(r'_+', val or '', para.text, count=1)
-                if para.text != original_text:
-                    logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}'")
+                if re.search(r'_+', para.text):
+                    if placeholder_index < len(text_fields_order):
+                        key = text_fields_order[placeholder_index]
+                        value = fields.get(key, '')
+                        para.text = re.sub(r'_+', value, para.text, count=1)
+                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
+                        placeholder_index += 1
+                    else:
+                        logger.warning(f"Больше заполнителей (_) в документе, чем ключей ({len(text_fields_order)})")
+            # Замена в таблицах
+            for table in doc.tables:
+                for row in table.rows:
+                    for cell in row.cells:
+                        for para in cell.paragraphs:
+                            original_text = para.text
+                            if re.search(r'_+', para.text):
+                                if placeholder_index < len(text_fields_order):
+                                    key = text_fields_order[placeholder_index]
+                                    value = fields.get(key, '')
+                                    para.text = re.sub(r'_+', value, para.text, count=1)
+                                    logger.debug(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
+                                    placeholder_index += 1
+                                else:
+                                    logger.warning(f"Больше заполнителей (_) в таблицах, чем ключей ({len(text_fields_order)})")
 
-        # Замена в параграфах
-        replace_placeholders(doc.paragraphs)
+        # Замена текстовых заполнителей
+        replace_placeholders(doc, fields)
 
-        # Замена в таблицах
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    replace_placeholders(cell.paragraphs)
-
-        # Обновление таблиц
+        # Функция обновления таблиц
         def update_table(table_index, field_data, column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
@@ -125,7 +164,7 @@ def generate():
                 logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {expected_columns}")
 
                 # Проверка количества столбцов
-                if len(table.rows) == 0 or len(table.rows[0].cells) < expected_columns:
+                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
                     logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
                     return
 
@@ -149,7 +188,7 @@ def generate():
                         if j < column_count:
                             value = field_data[key][i] if i < len(field_data[key]) else ''
                             row.cells[j + cell_offset].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value}")
+                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
