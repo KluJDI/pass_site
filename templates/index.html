@@ -39,34 +39,39 @@
         }
         .table-section {
             margin: 20px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 15px;
+            border: 2px solid #ddd;
             border-radius: 4px;
             background-color: #f9f9f9;
         }
         .table-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
             padding: 10px;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+            background-color: #fff;
         }
         .table-row input {
-            padding: 8px;
+            padding: 6px;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-        .table-row:last-child {
-            border-bottom: none;
+        .table-header {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-bottom: 2px solid #000;
         }
         button {
-            padding: 10px 20px;
-            background-color: #007BFF;
+            padding: 12px 24px;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-top: 10px;
+            margin: 10px 0;
         }
         button:hover {
             background-color: #0056b3;
@@ -102,19 +107,19 @@
         <label>Руководитель органа МВД:</label>
         <input type="text" name="mvd_head" placeholder="Введите должность">
         <label>Ф.И.О. органа МВД:</label>
-        <input type="text" name="mvd_name" placeholder="Введите Ф.И.О.">
+        <input type="text" name="mvd_name" placeholder="Введите Ф.И.А.">
         <label>Дата согласования (МВД):</label>
         <input type="text" name="mvd_date" placeholder="ДД.ММ.ГГГГ">
         <label>Руководитель органа МЧС:</label>
         <input type="text" name="mchs_head" placeholder="Введите должность">
         <label>Ф.И.О. органа МЧС:</label>
-        <input type="text" name="mchs_name" placeholder="Введите Ф.И.О.">
+        <input type="text" name="mchs_name" placeholder="Введите Ф.И.А.">
         <label>Дата согласования (МЧС):</label>
         <input type="text" name="mchs_date" placeholder="ДД.ММ.ГГГГ">
         <label>Руководитель Росгвардии:</label>
         <input type="text" name="rosgvardia_head" placeholder="Введите должность">
         <label>Ф.И.О. Росгвардии:</label>
-        <input type="text" name="rosgvardia_name" placeholder="Введите Ф.И.О.">
+        <input type="text" name="rosgvardia_name" placeholder="Введите Ф.И.А.">
         <label>Дата согласования (Росгвардия):</label>
         <input type="text" name="rosgvardia_date" placeholder="ДД.ММ.ГГГГ">
         <label>Населенный пункт:</label>
@@ -159,15 +164,25 @@
         <textarea name="public_guards_d" placeholder="Введите данные"></textarea>
         <label>Средства охраны:</label>
         <textarea name="security_equipment_e" placeholder="Введите данные"></textarea>
-        <label>Организация оповещения:</label>
-        <textarea name="notification_system_zh" placeholder="Введите данные"></textarea>
+        <label>Оповещение между постами:</label>
+        <textarea name="notification_system_zh" placeholder="Телефоны, радиостанции"></textarea>
+        <label>Оповещение с дежурной частью:</label>
+        <textarea name="notification_system_zh_2" placeholder="Телефоны, радиостанции"></textarea>
+        <label>Телефоны охранных служб:</label>
+        <textarea name="notification_system_zh_3" placeholder="Введите телефоны"></textarea>
+        <label>Телефоны органов безопасности:</label>
+        <textarea name="notification_system_zh_4" placeholder="Введите телефоны"></textarea>
+        <label>Телефоны органов власти:</label>
+        <textarea name="notification_system_zh_5" placeholder="Введите телефоны"></textarea>
+        <label>Аварийно-спасательные службы:</label>
+        <textarea name="notification_system_zh_6" placeholder="Наименование и расстояние"></textarea>
         <label>Инженерно-технические средства:</label>
         <textarea name="technical_security_a" placeholder="Введите данные"></textarea>
         <label>Пожарная безопасность:</label>
         <textarea name="fire_safety_b" placeholder="Введите данные"></textarea>
-        <label>Система оповещения и эвакуации:</label>
+        <label>Система эвакуации:</label>
         <textarea name="evacuation_system_v" placeholder="Введите данные"></textarea>
-        <label>Выводы о надежности охраны:</label>
+        <label>Надежность охраны:</label>
         <textarea name="security_reliability_a" placeholder="Введите выводы"></textarea>
         <label>Первоочередные мероприятия:</label>
         <textarea name="urgent_measures_b" placeholder="Введите мероприятия"></textarea>
@@ -186,6 +201,14 @@
 
         <div class="table-section">
             <h2>2. Объекты на территории</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Наименование</span>
+                    <span>Характеристика</span>
+                    <span>Место</span>
+                    <span>Защита</span>
+                </div>
+            </div>
             <div id="objects_on_territory">
                 <div class="table-row">
                     <input type="text" name="object_on_territory_name[]" placeholder="Наименование объекта">
@@ -199,6 +222,14 @@
 
         <div class="table-section">
             <h2>3. Соседние объекты</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Наименование</span>
+                    <span>Характеристика</span>
+                    <span>Сторона</span>
+                    <span>Расстояние</span>
+                </div>
+            </div>
             <div id="objects_nearby">
                 <div class="table-row">
                     <input type="text" name="object_nearby_name[]" placeholder="Наименование объекта">
@@ -212,6 +243,13 @@
 
         <div class="table-section">
             <h2>4. Транспортные коммуникации</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Вид транспорта</span>
+                    <span>Наименование</span>
+                    <span>Расстояние</span>
+                </div>
+            </div>
             <div id="transport">
                 <div class="table-row">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
@@ -224,6 +262,13 @@
 
         <div class="table-section">
             <h2>5. Организации обслуживания</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Наименование</span>
+                    <span>Деятельность</span>
+                    <span>График</span>
+                </div>
+            </div>
             <div id="service_orgs">
                 <div class="table-row">
                     <input type="text" name="service_org_name[]" placeholder="Наименование организации">
@@ -236,6 +281,13 @@
 
         <div class="table-section">
             <h2>7. Опасные участки</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Наименование</span>
+                    <span>Работники</span>
+                    <span>Риск</span>
+                </div>
+            </div>
             <div id="dangerous_sections">
                 <div class="table-row">
                     <input type="text" name="dangerous_section_name[]" placeholder="Наименование участка">
@@ -247,10 +299,17 @@
         </div>
 
         <div class="table-section">
-            <h2>9. Последствия террористического акта</h2>
+            <h2>9. Последствия террористической угрозы</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Угроза</span>
+                    <span>Пострадавшие</span>
+                    <span>Масштаб</span>
+                </div>
+            </div>
             <div id="consequences">
                 <div class="table-row">
-                    <input type="text" name="threat_name[]" placeholder="Террористическая угроза">
+                    <input type="text" name="threat_name[]" placeholder="Название угрозы">
                     <input type="text" name="threat_victims[]" placeholder="Количество пострадавших">
                     <input type="text" name="threat_scale[]" placeholder="Масштаб последствий">
                 </div>
@@ -260,6 +319,13 @@
 
         <div class="table-section">
             <h2>10г. Состав нарядов</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Вид наряда</span>
+                    <span>Единицы</span>
+                    <span>Люди</span>
+                </div>
+            </div>
             <div id="patrol_composition">
                 <div class="table-row">
                     <input type="text" name="patrol_type[]" placeholder="Вид наряда">
@@ -272,12 +338,22 @@
 
         <div class="table-section">
             <h2>12. Критические элементы</h2>
+            <div class="table-header">
+                <div class="table-row">
+                    <span>Название</span>
+                    <span>Требования</span>
+                    <span>Физическая защита</span>
+                    <span>Предотвращение</span>
+                    <span>Достаточность</span>
+                    <span>Компенсация</span>
+                </div>
+            </div>
             <div id="critical_elements">
                 <div class="table-row">
                     <input type="text" name="critical_element_name[]" placeholder="Наименование элемента">
                     <input type="text" name="critical_element_requirements[]" placeholder="Требования">
                     <input type="text" name="critical_element_physical_protection[]" placeholder="Физическая защита">
-                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение теракта">
+                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение">
                     <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность мер">
                     <input type="text" name="critical_element_compensation[]" placeholder="Компенсационные меры">
                 </div>
