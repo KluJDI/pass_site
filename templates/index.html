@@ -71,7 +71,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin: 10px 0;
+            margin: 10px 5px;
         }
         button:hover {
             background-color: #0056b3;
@@ -81,6 +81,12 @@
         }
         .submit-button:hover {
             background-color: #218838;
+        }
+        .debug-button {
+            background-color: #ffc107;
+        }
+        .debug-button:hover {
+            background-color: #e0a800;
         }
     </style>
 </head>
@@ -369,6 +375,7 @@
             <button type="button" onclick="addRow('critical_elements')">Добавить элемент</button>
         </div>
 
+        <button type="button" class="debug-button" onclick="debugForm()">Проверить данные формы</button>
         <button type="submit" class="submit-button">Сгенерировать паспорт</button>
     </form>
 
@@ -379,7 +386,6 @@
             const newRow = templateRow.cloneNode(true);
             newRow.querySelectorAll('input').forEach(input => {
                 input.value = '';
-                // Убедимся, что имена полей содержат []
                 if (!input.name.endsWith('[]')) {
                     input.name = input.name + '[]';
                 }
@@ -387,7 +393,16 @@
             table.appendChild(newRow);
         }
 
-        // Добавляем обработчик отправки формы для дебага
+        function debugForm() {
+            const form = document.getElementById('passportForm');
+            const formData = new FormData(form);
+            console.log('Данные формы:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            alert('Данные формы выведены в консоль браузера (F12 -> Console)');
+        }
+
         document.getElementById('passportForm').addEventListener('submit', function(e) {
             const formData = new FormData(this);
             console.log('Отправляемые данные формы:');
