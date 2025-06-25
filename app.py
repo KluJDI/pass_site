@@ -8,13 +8,17 @@ import logging
 app = Flask(__name__)
 
 # Настройка логирования
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.route('/')
 def form():
     logger.info("Открыта страница формы")
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Ошибка при рендеринге формы: {str(e)}")
+        return "Ошибка загрузки формы", 500
 
 @app.route('/generate', methods=['POST'])
 def generate():
@@ -28,32 +32,72 @@ def generate():
             return "Ошибка: Шаблон документа не найден", 500
 
         # Текстовые поля
-        text_fields_order = [
-            'security_classification', 'copy_number',
-            'executive_authority_head', 'executive_authority_name', 'approval_date',
-            'security_agency_head', 'security_agency_name', 'security_agency_date',
-            'mvd_head', 'mvd_name', 'mvd_date',
-            'mchs_head', 'mchs_name', 'mchs_date',
-            'rosgvardia_head', 'rosgvardia_name', 'rosgvardia_date',
-            'locality',
-            'object_name', 'object_address', 'object_affiliation', 'object_boundaries',
-            'object_area_perimeter', 'monitoring_results', 'object_category',
-            'mvd_territory', 'public_organizations', 'terrain_characteristics',
-            'staff_count', 'attendance', 'tenants_info',
-            'illegal_actions_a', 'diversion_manifestations_b',
-            'security_forces_a', 'patrol_routes_b', 'stationary_posts_b',
-            'public_guards_d', 'security_equipment_e',
-            'notification_system_zh', 'notification_system_zh_2', 'notification_system_zh_3',
-            'notification_system_zh_4', 'notification_system_zh_5', 'notification_system_zh_6',
-            'technical_security_a', 'fire_safety_b', 'evacuation_system_v',
-            'security_reliability_a', 'urgent_measures_b', 'funding_v',
-            'additional_info',
-            'recreation_areas', 'communication_schemes', 'evacuation_instructions', 'correction_log',
-            'rights_holder', 'rights_holder_name', 'creation_date', 'update_date'
-        ]
+        text_fields = {
+            'security_classification': '_____________________',
+            'copy_number': '_________',
+            'executive_authority_head': '_______________________________________',
+            'executive_authority_name': '___________________',
+            'approval_date': '"__" _______________ 20__ г.',
+            'security_agency_head': '______________________________________',
+            'security_agency_name': '_________________',
+            'security_agency_date': '"__" _______________ 20__ г.',
+            'mvd_head': '_______________________________________',
+            'mvd_name': '___________________',
+            'mvd_date': '"__" _______________ 20__ г.',
+            'mchs_head': '______________________________________',
+            'mchs_name': '_________________',
+            'mchs_date': '"__" _______________ 20__ г.',
+            'rosgvardia_head': '____________________________________',
+            'rosgvardia_name': '__________________',
+            'rosgvardia_date': '"__" _______________ 20__ г.',
+            'locality': '___________________________________________',
+            'object_name': '___________________________________________________________________________',
+            'object_address': '___________________________________________________________________________',
+            'object_affiliation': '___________________________________________________________________________',
+            'object_boundaries': '___________________________________________________________________________',
+            'object_area_perimeter': '___________________________________________________________________________',
+            'monitoring_results': '___________________________________________________________________________',
+            'object_category': '___________________________________________________________________________',
+            'mvd_territory': '___________________________________________________________________________',
+            'public_organizations': '___________________________________________________________________________',
+            'terrain_characteristics': '___________________________________________________________________________',
+            'staff_count': '___________________________________________________________________________',
+            'attendance': '___________________________________________________________________________',
+            'tenants_info': '___________________________________________________________________________',
+            'illegal_actions_a': '___________________________________________________________________',
+            'diversion_manifestations_b': '____________________________________________________________________',
+            'security_forces_a': '___________________________________________________________________',
+            'patrol_routes_b': '___________________________________________________________________',
+            'stationary_posts_b': '___________________________________________________________________',
+            'public_guards_d': '___________________________________________________________________',
+            'security_equipment_e': '__________________________________________________________________',
+            'notification_system_zh': '___________________________________________________________________________',
+            'notification_system_zh_2': '___________________________________________________________________________',
+            'notification_system_zh_3': '___________________________________________________________________________',
+            'notification_system_zh_4': '___________________________________________________________________________',
+            'notification_system_zh_5': '___________________________________________________________________________',
+            'notification_system_zh_6': '___________________________________________________________________________',
+            'technical_security_a': '__________________________________________________________________',
+            'fire_safety_b': '__________________________________________________________________',
+            'evacuation_system_v': '___________________________________________________________________________',
+            'security_reliability_a': '___________________________________________________________________',
+            'urgent_measures_b': '___________________________________________________________________',
+            'funding_v': '____________________________________________________________________',
+            'additional_info': '___________________________________________________________________________',
+            'recreation_areas': '___________________________________________________________________________',
+            'communication_schemes': '___________________________________________________________________________',
+            'evacuation_instructions': '___________________________________________________________________________',
+            'correction_log': '___________________________________________________________________________',
+            'rights_holder': '___________________________________________________________________________',
+            'rights_holder_name': '________________________________ __________________________________________',
+            'creation_date': 'Составлен "__" ____________ 20__ г.',
+            'update_date': 'Актуализирован "__" _________ 20__ г.'
+        }
 
         # Собираем данные из формы
-        fields = {key: request.form.get(key, '') for key in text_fields_order}
+        fields = {key: request.form.get(key, '') for key in text_fields}
+
+        # Таблицы
         table_fields = {
             'objects_on_territory': {
                 'name': request.form.getlist('object_on_territory_name[]'),
@@ -102,46 +146,33 @@ def generate():
             }
         }
 
-        logger.debug(f"Данные формы (текстовые поля): {fields}")
-        for table_name, data in table_fields.items():
-            logger.debug(f"Данные формы (таблица {table_name}): {data}")
-
-        # Проверка данных таблиц
-        for table_name, data in table_fields.items():
-            lengths = {key: len(values) for key, values in data.items()}
-            logger.debug(f"Длина данных для таблицы {table_name}: {lengths}")
-            if not all(len(values) == len(data[list(data.keys())[0]]) for values in data.values()):
-                logger.error(f"Несоответствие длины данных в таблице {table_name}: {lengths}")
-                return f"Ошибка: Несоответствие количества данных в таблице {table_name}", 400
-
         # Загружаем шаблон
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены текстовых заполнителей
+        # Функция замены текстовых заполнителей с сохранением структуры
         def replace_placeholders(doc, fields):
-            placeholder_index = 0
             for para in doc.paragraphs:
-                original_text = para.text
-                if re.search(r'_+', para.text):
-                    if placeholder_index < len(text_fields_order):
-                        key = text_fields_order[placeholder_index]
-                        value = fields.get(key, '')
-                        para.text = re.sub(r'_+', value, para.text, count=1)
-                        logger.debug(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
-                        placeholder_index += 1
+                original_text = para.text.strip()
+                for key, placeholder in text_fields.items():
+                    if placeholder in original_text:
+                        value = fields.get(key, '').strip()
+                        if value:
+                            para.text = original_text.replace(placeholder, value)
+                        para.alignment = 1  # Выравнивание по центру
+                        logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
-                            original_text = para.text
-                            if re.search(r'_+', para.text):
-                                if placeholder_index < len(text_fields_order):
-                                    key = text_fields_order[placeholder_index]
-                                    value = fields.get(key, '')
-                                    para.text = re.sub(r'_+', value, para.text, count=1)
-                                    logger.debug(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key}, значение: {value})")
-                                    placeholder_index += 1
+                            original_text = para.text.strip()
+                            for key, placeholder in text_fields.items():
+                                if placeholder in original_text:
+                                    value = fields.get(key, '').strip()
+                                    if value:
+                                        para.text = original_text.replace(placeholder, value)
+                                    para.alignment = 1  # Выравнивание по центру
+                                    logger.info(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key})")
 
         # Замена текстовых заполнителей
         replace_placeholders(doc, fields)
@@ -163,22 +194,27 @@ def generate():
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
-                    logger.debug(f"Удалена строка в таблице {table_index}")
 
-                # Добавляем строки
-                row_count = max(len(field_data[key]) for key in field_data)
-                logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
+                # Добавляем строки только если есть данные
+                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
+                if row_count == 0:
+                    logger.info(f"Нет данных для таблицы {table_index}, строка не добавлена")
+                    return
+
                 for i in range(row_count):
                     row = table.add_row()
                     cell_offset = 1 if has_number_column else 0
                     if has_number_column:
                         row.cells[0].text = str(i + 1)
-                        logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
+                        for para in row.cells[0].paragraphs:
+                            para.alignment = 1  # Выравнивание по центру
                     for j, key in enumerate(field_data.keys()):
                         if j < column_count:
                             value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
                             row.cells[j + cell_offset].text = value
-                            logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
+                            for para in row.cells[j + cell_offset].paragraphs:
+                                para.alignment = 1  # Выравнивание по центру
+
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
