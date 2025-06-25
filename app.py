@@ -121,10 +121,10 @@ def generate():
                     logger.error(f"Таблица с индексом {table_index} не найдена в документе")
                     return
                 table = doc.tables[table_index]
-                logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {column_count + (1 if has_number_column else 0)}")
+                expected_columns = column_count + (1 if has_number_column else 0)
+                logger.info(f"Обновление таблицы {table_index}, ожидаемое количество столбцов: {expected_columns}")
 
                 # Проверка количества столбцов
-                expected_columns = column_count + (1 if has_number_column else 0)
                 if len(table.rows) == 0 or len(table.rows[0].cells) < expected_columns:
                     logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
                     return
@@ -161,7 +161,7 @@ def generate():
         update_table(3, table_fields['service_orgs'], 3)  # Таблица 5
         update_table(4, table_fields['dangerous_sections'], 3)  # Таблица 7
         update_table(5, table_fields['consequences'], 3)  # Таблица 9
-        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)  # Таблица 10г (без N п/п)
+        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)  # Таблица 10г
         update_table(7, table_fields['critical_elements'], 6)  # Таблица 12
 
         # Сохраняем документ
