@@ -160,7 +160,8 @@ def generate():
                 expected_columns = column_count + (1 if has_number_column else 0)
                 logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
 
-                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
+                # Проверка структуры таблицы
+                if not table.rows or len(table.rows[0].cells) != expected_columns:
                     logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
                     return
 
