@@ -102,50 +102,38 @@ def generate():
             }
         }
 
-        # Проверка данных таблиц
-        for table_name, data in table_fields.items():
-            if not any(data[key] for key in data):
-                table_fields[table_name] = {key: [''] for key in data}
-            elif not all(len(data[key]) == len(data[list(data.keys())[0]]) for key in data):
-                logger.error(f"Несоответствие длины данных в таблице {table_name}")
-                return f"Ошибка: Несоответствие количества данных в таблице {table_name}", 400
-
         # Загружаем шаблон
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены текстовых заполнителей с выравниванием по центру
+        # Функция замены текстовых заполнителей
         def replace_placeholders(doc, fields):
             placeholder_index = 0
             for para in doc.paragraphs:
-                original_text = para.text
                 if re.search(r'_+', para.text):
                     if placeholder_index < len(text_fields_order):
                         key = text_fields_order[placeholder_index]
                         value = fields.get(key, '')
                         para.text = re.sub(r'_+', value, para.text)
-                        para.alignment = 1  # 1 = выравнивание по центру
-                        logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
+                        logger.info(f"Замена в параграфе: '{para.text}' (ключ: {key})")
                         placeholder_index += 1
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
-                            original_text = para.text
                             if re.search(r'_+', para.text):
                                 if placeholder_index < len(text_fields_order):
                                     key = text_fields_order[placeholder_index]
                                     value = fields.get(key, '')
                                     para.text = re.sub(r'_+', value, para.text)
-                                    para.alignment = 1  # Выравнивание по центру
-                                    logger.info(f"Таблица: замена '{original_text}' -> '{para.text}' (ключ: {key})")
+                                    logger.info(f"Таблица: замена '{para.text}' (ключ: {key})")
                                     placeholder_index += 1
 
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы без автоматического добавления "1"
-        def update_table(table_index, field_data, expected_column_count, has_number_column=True):
+        # Функция обновления таблицы
+        def update_table(table_index, field_data, expected_column_count):
             try:
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица с индексом {table_index} не найдена")
@@ -153,14 +141,14 @@ def generate():
 
                 table = doc.tables[table_index]
                 actual_columns = len(table.rows[0].cells) if table.rows else 0
-                logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_column_count + (1 if has_number_column else 0)}")
+                logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_column_count}")
 
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
 
-                # Добавляем строки только если есть данные
-                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
+                # Добавляем строки
+                row_count = len(field_data['name']) if field_data['name'] else 0
                 if row_count == 0:
                     row = table.add_row()
                     for cell in row.cells:
@@ -172,32 +160,28 @@ def generate():
                     if len(row.cells) != actual_columns:
                         logger.error(f"Ошибка: новая строка в таблице {table_index} имеет {len(row.cells)} столбцов, ожидается {actual_columns}")
                         continue
-                    cell_offset = 1 if has_number_column else 0
-                    if has_number_column and len(row.cells) > 0 and 'N п/п' in [h.text.strip() for h in table.rows[0].cells]:
-                        row.cells[0].text = str(i + 1)
-                    for j, key in enumerate(field_data.keys()):
-                        target_column = j + cell_offset
-                        if target_column < actual_columns:
-                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                            row.cells[target_column].text = value
-                            for para in row.cells[target_column].paragraphs:
-                                para.alignment = 1  # Выравнивание по центру
+                    if len(row.cells) > 0:
+                        row.cells[0].text = str(i + 1)  # Номер строки
+                    for j, key in enumerate(['name', 'details', 'location', 'security']):
+                        if j + 1 < actual_columns:
+                            value = field_data[key][i] if i < len(field_data[key]) else ''
+                            row.cells[j + 1].text = value
                         else:
-                            logger.warning(f"Пропущен столбец {target_column} в таблице {table_index}")
+                            logger.warning(f"Пропущен столбец {j + 1} в таблице {table_index}")
 
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
         # Обновляем таблицы
-        update_table(0, table_fields['objects_on_territory'], 4, has_number_column=True)
-        update_table(1, table_fields['objects_nearby'], 4, has_number_column=True)
-        update_table(2, table_fields['transport'], 3, has_number_column=True)
-        update_table(3, table_fields['service_orgs'], 3, has_number_column=True)
-        update_table(4, table_fields['dangerous_sections'], 3, has_number_column=True)
-        update_table(5, table_fields['consequences'], 3, has_number_column=True)
-        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)
-        update_table(7, table_fields['critical_elements'], 6, has_number_column=True)
+        update_table(0, table_fields['objects_on_territory'], 4)
+        update_table(1, table_fields['objects_nearby'], 4)
+        update_table(2, table_fields['transport'], 3)
+        update_table(3, table_fields['service_orgs'], 3)
+        update_table(4, table_fields['dangerous_sections'], 3)
+        update_table(5, table_fields['consequences'], 3)
+        update_table(6, table_fields['patrol_composition'], 3)
+        update_table(7, table_fields['critical_elements'], 6)
 
         # Сохраняем документ
         output = io.BytesIO()
