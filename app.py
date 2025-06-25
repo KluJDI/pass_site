@@ -56,49 +56,49 @@ def generate():
         fields = {key: request.form.get(key, '') for key in text_fields_order}
         table_fields = {
             'objects_on_territory': {
-                'name': request.form.getlist('object_on_territory_name'),
-                'details': request.form.getlist('object_on_territory_details'),
-                'location': request.form.getlist('object_on_territory_location'),
-                'security': request.form.getlist('object_on_territory_security')
+                'name': request.form.getlist('object_on_territory_name[]'),
+                'details': request.form.getlist('object_on_territory_details[]'),
+                'location': request.form.getlist('object_on_territory_location[]'),
+                'security': request.form.getlist('object_on_territory_security[]')
             },
             'objects_nearby': {
-                'name': request.form.getlist('object_nearby_name'),
-                'details': request.form.getlist('object_nearby_details'),
-                'side': request.form.getlist('object_nearby_side'),
-                'distance': request.form.getlist('object_nearby_distance')
+                'name': request.form.getlist('object_nearby_name[]'),
+                'details': request.form.getlist('object_nearby_details[]'),
+                'side': request.form.getlist('object_nearby_side[]'),
+                'distance': request.form.getlist('object_nearby_distance[]')
             },
             'transport': {
-                'type': request.form.getlist('transport_type'),
-                'name': request.form.getlist('transport_name'),
-                'distance': request.form.getlist('transport_distance')
+                'type': request.form.getlist('transport_type[]'),
+                'name': request.form.getlist('transport_name[]'),
+                'distance': request.form.getlist('transport_distance[]')
             },
             'service_orgs': {
-                'name': request.form.getlist('service_org_name'),
-                'activity': request.form.getlist('service_org_activity'),
-                'schedule': request.form.getlist('service_org_schedule')
+                'name': request.form.getlist('service_org_name[]'),
+                'activity': request.form.getlist('service_org_activity[]'),
+                'schedule': request.form.getlist('service_org_schedule[]')
             },
             'dangerous_sections': {
-                'name': request.form.getlist('dangerous_section_name'),
-                'workers': request.form.getlist('dangerous_section_workers'),
-                'risk': request.form.getlist('dangerous_section_risk')
+                'name': request.form.getlist('dangerous_section_name[]'),
+                'workers': request.form.getlist('dangerous_section_workers[]'),
+                'risk': request.form.getlist('dangerous_section_risk[]')
             },
             'consequences': {
-                'name': request.form.getlist('threat_name'),
-                'victims': request.form.getlist('threat_victims'),
-                'scale': request.form.getlist('threat_scale')
+                'name': request.form.getlist('threat_name[]'),
+                'victims': request.form.getlist('threat_victims[]'),
+                'scale': request.form.getlist('threat_scale[]')
             },
             'patrol_composition': {
-                'type': request.form.getlist('patrol_type'),
-                'units': request.form.getlist('patrol_units'),
-                'people': request.form.getlist('patrol_people')
+                'type': request.form.getlist('patrol_type[]'),
+                'units': request.form.getlist('patrol_units[]'),
+                'people': request.form.getlist('patrol_people[]')
             },
             'critical_elements': {
-                'name': request.form.getlist('critical_element_name'),
-                'requirements': request.form.getlist('critical_element_requirements'),
-                'physical_protection': request.form.getlist('critical_element_physical_protection'),
-                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention'),
-                'sufficiency': request.form.getlist('critical_element_sufficiency'),
-                'compensation': request.form.getlist('critical_element_compensation')
+                'name': request.form.getlist('critical_element_name[]'),
+                'requirements': request.form.getlist('critical_element_requirements[]'),
+                'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
+                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
+                'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
+                'compensation': request.form.getlist('critical_element_compensation[]')
             }
         }
 
@@ -166,12 +166,8 @@ def generate():
                     logger.debug(f"Удалена строка в таблице {table_index}")
 
                 # Добавляем строки
-                row_count = len(field_data[list(field_data.keys())[0]])
+                row_count = max(len(field_data[key]) for key in field_data)
                 logger.debug(f"Добавление {row_count} строк в таблицу {table_index}")
-                if row_count == 0:
-                    logger.warning(f"Нет данных для таблицы {table_index}")
-                    return
-
                 for i in range(row_count):
                     row = table.add_row()
                     cell_offset = 1 if has_number_column else 0
@@ -180,7 +176,7 @@ def generate():
                         logger.debug(f"Таблица {table_index}, строка {i}, столбец 0: {i + 1}")
                     for j, key in enumerate(field_data.keys()):
                         if j < column_count:
-                            value = field_data[key][i] if i < len(field_data[key]) else ''
+                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
                             row.cells[j + cell_offset].text = value
                             logger.debug(f"Таблица {table_index}, строка {i}, столбец {j + cell_offset}: {value} (ключ: {key})")
             except Exception as e:
