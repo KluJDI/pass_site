@@ -21,7 +21,7 @@ def form():
 def generate():
     try:
         # Путь к шаблону
-        template_path = os.path.join(os.path.dirname(__file__), "pasport_mesta_massovogo_prebuvaniya_lyudei.docx")
+        template_path = os.path.join(os.path.dirname(__file__), "pasport_mesta_massovogo_prebuvaniya_lyudei_new.docx")
         logger.info(f"Проверка шаблона по пути: {template_path}")
 
         if not os.path.exists(template_path):
@@ -122,23 +122,12 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Логирование структуры таблиц с детальной отладкой
+        # Логирование структуры таблиц
         for i, table in enumerate(doc.tables):
             if table.rows and table.rows[0].cells:
                 columns = len(table.rows[0].cells)
-                headers = []
-                for j, cell in enumerate(table.rows[0].cells):
-                    text = cell.text.strip()
-                    cell_element = cell._element
-                    grid_span = cell_element.get(qn('w:gridSpan'))
-                    v_merge = cell_element.get(qn('w:vMerge'))
-                    h_merge = cell_element.get(qn('w:hMerge'))
-                    headers.append(f"{text} (col={j}, gridSpan={grid_span or 1}, vMerge={vMerge or 'none'}, hMerge={h_merge or 'none'})")
+                headers = [cell.text.strip() for cell in table.rows[0].cells]
                 logger.info(f"Таблица {i}: {columns} столбцов, заголовки: {headers}")
-                # Проверка содержимого ячеек для отладки
-                for row in table.rows[1:]:
-                    row_data = [cell.text.strip() for cell in row.cells]
-                    logger.debug(f"Таблица {i}, строка {table.rows.index(row)}: {row_data}")
             else:
                 logger.warning(f"Таблица {i} пустая или без строк")
 
@@ -170,7 +159,7 @@ def generate():
         # Замена текстовых данных
         replace_placeholders(doc, fields)
 
-        # Функция обновления таблицы с обработкой объединённых ячеек
+        # Функция обновления таблицы
         def update_table(table_index, field_data, expected_column_count, has_number_column=True):
             try:
                 if table_index >= len(doc.tables):
@@ -180,14 +169,6 @@ def generate():
                 table = doc.tables[table_index]
                 actual_columns = len(table.rows[0].cells) if table.rows else 0
                 logger.info(f"Обновление таблицы {table_index}, столбцов в шаблоне: {actual_columns}, ожидается: {expected_column_count + (1 if has_number_column else 0)}")
-
-                # Проверка объединённых ячеек
-                effective_columns = actual_columns
-                for cell in table.rows[0].cells:
-                    grid_span = cell._element.get(qn('w:gridSpan'))
-                    if grid_span:
-                        effective_columns += int(grid_span) - 1
-                logger.info(f"Таблица {table_index}, эффективное количество столбцов (с учётом gridSpan): {effective_columns}")
 
                 # Очищаем строки, кроме заголовка
                 while len(table.rows) > 1:
