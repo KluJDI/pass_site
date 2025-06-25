@@ -1,4 +1,3 @@
-```python
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
