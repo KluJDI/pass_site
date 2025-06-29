@@ -1,10 +1,8 @@
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
-import re
 import os
 import logging
-import json
 
 app = Flask(__name__)
 
@@ -101,12 +99,14 @@ def generate():
         # Таблицы
         table_fields = {
             'objects_on_territory': {
+                'num': request.form.getlist('object_on_territory_num[]') if 'object_on_territory_num[]' in request.form else [''],
                 'name': request.form.getlist('object_on_territory_name[]'),
                 'details': request.form.getlist('object_on_territory_details[]'),
                 'location': request.form.getlist('object_on_territory_location[]'),
                 'security': request.form.getlist('object_on_territory_security[]')
             },
             'objects_nearby': {
+                'num': request.form.getlist('object_nearby_num[]') if 'object_nearby_num[]' in request.form else [''],
                 'name': request.form.getlist('object_nearby_name[]'),
                 'details': request.form.getlist('object_nearby_details[]'),
                 'side': request.form.getlist('object_nearby_side[]'),
@@ -151,7 +151,7 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены текстовых заполнителей с сохранением структуры
+        # Функция рекурсивной замены плейсхолдеров
         def replace_placeholders(doc, fields, table_fields):
             def replace_in_text(text, fields, table_fields):
                 if not text:
@@ -160,10 +160,7 @@ def generate():
                 for key, placeholder in text_fields.items():
                     if placeholder in text:
                         value = fields.get(key, '').strip()
-                        if value:
-                            text = text.replace(placeholder, value)
-                        else:
-                            text = text.replace(placeholder, "")  # Убираем подчёркивания, если данных нет
+                        text = text.replace(placeholder, value if value else "")
                 # Замена плейсхолдеров для таблиц (например, {objects_on_territory[0].name})
                 for table_key, table_data in table_fields.items():
                     row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
@@ -176,7 +173,7 @@ def generate():
                 return text
 
             for para in doc.paragraphs:
-                original_text = para.text.strip()
+                original_text = para.text
                 new_text = replace_in_text(original_text, fields, table_fields)
                 if new_text != original_text:
                     para.text = new_text
@@ -186,67 +183,15 @@ def generate():
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
-                            original_text = para.text.strip()
+                            original_text = para.text
                             new_text = replace_in_text(original_text, fields, table_fields)
                             if new_text != original_text:
                                 para.text = new_text
                                 para.alignment = 1  # Выравнивание по центру
                                 logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
 
-        # Замена текстовых заполнителей
+        # Замена всех плейсхолдеров
         replace_placeholders(doc, fields, table_fields)
-
-        # Функция обновления таблиц
-        def update_table(table_index, field_data, column_count, has_number_column=True):
-            try:
-                if table_index >= len(doc.tables):
-                    logger.error(f"Таблица с индексом {table_index} не найдена")
-                    return
-                table = doc.tables[table_index]
-                expected_columns = column_count + (1 if has_number_column else 0)
-                logger.info(f"Обновление таблицы {table_index}, столбцов: {expected_columns}")
-
-                if len(table.rows) == 0 or len(table.rows[0].cells) != expected_columns:
-                    logger.error(f"Таблица {table_index} имеет {len(table.rows[0].cells) if table.rows else 0} столбцов, ожидается {expected_columns}")
-                    return
-
-                # Очищаем строки, кроме заголовка
-                while len(table.rows) > 1:
-                    table._element.remove(table.rows[-1]._element)
-
-                # Добавляем строки только если есть данные
-                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
-                if row_count == 0:
-                    logger.info(f"Нет данных для таблицы {table_index}, строка не добавлена")
-                    return
-
-                for i in range(row_count):
-                    row = table.add_row()
-                    cell_offset = 1 if has_number_column else 0
-                    if has_number_column:
-                        row.cells[0].text = str(i + 1)
-                        for para in row.cells[0].paragraphs:
-                            para.alignment = 1  # Выравнивание по центру
-                    for j, key in enumerate(field_data.keys()):
-                        if j < column_count:
-                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                            row.cells[j + cell_offset].text = value
-                            for para in row.cells[j + cell_offset].paragraphs:
-                                para.alignment = 1  # Выравнивание по центру
-
-            except Exception as e:
-                logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
-                raise
-
-        # Обновляем таблицы
-        update_table(0, table_fields['objects_on_territory'], 4)
-        update_table(1, table_fields['objects_nearby'], 4)
-        update_table(2, table_fields['transport'], 3)
-        update_table(3, table_fields['service_orgs'], 3)
-        update_table(4, table_fields['dangerous_sections'], 3)
-        update_table(5, table_fields['consequences'], 3)
-        update_table(6, table_fields['patrol_composition'], 3, has_number_column=False)
-        update_table(7, table_fields['critical_elements'], 6)
 
         # Сохраняем документ
         output = io.BytesIO()
