@@ -160,7 +160,7 @@
         <textarea name="patrol_routes_b" placeholder="Введите данные"></textarea>
         <label>Стационарные посты:</label>
         <textarea name="stationary_posts_b" placeholder="Введите данные"></textarea>
-        <label>Народные дружины:</label>
+        <label>pl_дружины:</label>
         <textarea name="public_guards_d" placeholder="Введите данные"></textarea>
         <label>Средства охраны:</label>
         <textarea name="security_equipment_e" placeholder="Введите данные"></textarea>
@@ -206,7 +206,6 @@
         <input type="text" name="creation_date" placeholder="ДД.ММ.ГГГГ">
         <label>Дата актуализации:</label>
         <input type="text" name="update_date" placeholder="ДД.ММ.ГГГГ">
-
         <div class="table-section">
             <h2>2. Объекты на территории</h2>
             <div class="table-header">
@@ -229,7 +228,6 @@
             </div>
             <button type="button" onclick="addRow('objects_on_territory')">Добавить объект</button>
         </div>
-
         <div class="table-section">
             <h2>3. Соседние объекты</h2>
             <div class="table-header">
@@ -245,14 +243,13 @@
                 <div class="table-row">
                     <input type="text" name="object_nearby_num[]" placeholder="Номер">
                     <input type="text" name="object_nearby_name[]" placeholder="Наименование объекта">
-                    <input type="text" name="object_nearby_details[]" placeholder="Характеристика объекта">
-                    <input type="text" name="object_nearby_side[]" placeholder="Сторона расположения">
+                    <input type="text" name="object_nearby_characteristics[]" placeholder="Характеристика объекта">
+                    <input type="text" name="object_nearby_location[]" placeholder="Сторона расположения">
                     <input type="text" name="object_nearby_distance[]" placeholder="Расстояние (м)">
                 </div>
             </div>
             <button type="button" onclick="addRow('objects_nearby')">Добавить объект</button>
         </div>
-
         <div class="table-section">
             <h2>4. Транспортные коммуникации</h2>
             <div class="table-header">
@@ -262,16 +259,15 @@
                     <span>Расстояние</span>
                 </div>
             </div>
-            <div id="transport">
+            <div id="transport_communications">
                 <div class="table-row">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
                     <input type="text" name="transport_name[]" placeholder="Наименование объекта">
                     <input type="text" name="transport_distance[]" placeholder="Расстояние (м)">
                 </div>
             </div>
-            <button type="button" onclick="addRow('transport')">Добавить коммуникацию</button>
+            <button type="button" onclick="addRow('transport_communications')">Добавить коммуникацию</button>
         </div>
-
         <div class="table-section">
             <h2>5. Организации обслуживания</h2>
             <div class="table-header">
@@ -281,16 +277,15 @@
                     <span>График</span>
                 </div>
             </div>
-            <div id="service_orgs">
+            <div id="service_organizations">
                 <div class="table-row">
                     <input type="text" name="service_org_name[]" placeholder="Наименование организации">
                     <input type="text" name="service_org_activity[]" placeholder="Вид деятельности">
                     <input type="text" name="service_org_schedule[]" placeholder="График работ">
                 </div>
             </div>
-            <button type="button" onclick="addRow('service_orgs')">Добавить организацию</button>
+            <button type="button" onclick="addRow('service_organizations')">Добавить организацию</button>
         </div>
-
         <div class="table-section">
             <h2>7. Опасные участки</h2>
             <div class="table-header">
@@ -300,16 +295,15 @@
                     <span>Риск</span>
                 </div>
             </div>
-            <div id="dangerous_sections">
+            <div id="dangerous_areas">
                 <div class="table-row">
-                    <input type="text" name="dangerous_section_name[]" placeholder="Наименование участка">
-                    <input type="text" name="dangerous_section_workers[]" placeholder="Количество работников">
-                    <input type="text" name="dangerous_section_risk[]" placeholder="Характер ЧС">
+                    <input type="text" name="dangerous_area_name[]" placeholder="Наименование участка">
+                    <input type="text" name="dangerous_area_worker_count[]" placeholder="Количество работников">
+                    <input type="text" name="dangerous_area_emergency_type[]" placeholder="Характер ЧС">
                 </div>
             </div>
-            <button type="button" onclick="addRow('dangerous_sections')">Добавить участок</button>
+            <button type="button" onclick="addRow('dangerous_areas')">Добавить участок</button>
         </div>
-
         <div class="table-section">
             <h2>9. Последствия террористической угрозы</h2>
             <div class="table-header">
@@ -319,16 +313,15 @@
                     <span>Масштаб</span>
                 </div>
             </div>
-            <div id="consequences">
+            <div id="terror_consequences">
                 <div class="table-row">
-                    <input type="text" name="threat_name[]" placeholder="Название угрозы">
-                    <input type="text" name="threat_victims[]" placeholder="Количество пострадавших">
-                    <input type="text" name="threat_scale[]" placeholder="Масштаб последствий">
+                    <input type="text" name="terror_consequence_threat[]" placeholder="Название угрозы">
+                    <input type="text" name="terror_consequence_victims_count[]" placeholder="Количество пострадавших">
+                    <input type="text" name="terror_consequence_consequence_scale[]" placeholder="Масштаб последствий">
                 </div>
             </div>
-            <button type="button" onclick="addRow('consequences')">Добавить угрозу</button>
+            <button type="button" onclick="addRow('terror_consequences')">Добавить угрозу</button>
         </div>
-
         <div class="table-section">
             <h2>10г. Состав нарядов</h2>
             <div class="table-header">
@@ -338,16 +331,15 @@
                     <span>Люди</span>
                 </div>
             </div>
-            <div id="patrol_composition">
+            <div id="security_posts">
                 <div class="table-row">
-                    <input type="text" name="patrol_type[]" placeholder="Вид наряда">
-                    <input type="text" name="patrol_units[]" placeholder="Количество единиц">
-                    <input type="text" name="patrol_people[]" placeholder="Количество человек">
+                    <input type="text" name="security_post_type[]" placeholder="Вид наряда">
+                    <input type="text" name="security_post_units[]" placeholder="Количество единиц">
+                    <input type="text" name="security_post_persons[]" placeholder="Количество человек">
                 </div>
             </div>
-            <button type="button" onclick="addRow('patrol_composition')">Добавить наряд</button>
+            <button type="button" onclick="addRow('security_posts')">Добавить наряд</button>
         </div>
-
         <div class="table-section">
             <h2>12. Критические элементы</h2>
             <div class="table-header">
@@ -360,22 +352,20 @@
                     <span>Компенсация</span>
                 </div>
             </div>
-            <div id="critical_elements">
+            <div id="protection_assessment">
                 <div class="table-row">
-                    <input type="text" name="critical_element_name[]" placeholder="Наименование элемента">
-                    <input type="text" name="critical_element_requirements[]" placeholder="Требования">
-                    <input type="text" name="critical_element_physical_protection[]" placeholder="Физическая защита">
-                    <input type="text" name="critical_element_terrorism_prevention[]" placeholder="Предотвращение">
-                    <input type="text" name="critical_element_sufficiency[]" placeholder="Достаточность мер">
-                    <input type="text" name="critical_element_compensation[]" placeholder="Компенсационные меры">
+                    <input type="text" name="protection_assessment_element_name[]" placeholder="Наименование элемента">
+                    <input type="text" name="protection_assessment_requirements[]" placeholder="Требования">
+                    <input type="text" name="protection_assessment_physical_protection[]" placeholder="Физическая защита">
+                    <input type="text" name="protection_assessment_terror_prevention[]" placeholder="Предотвращение">
+                    <input type="text" name="protection_assessment_sufficiency[]" placeholder="Достаточность мер">
+                    <input type="text" name="protection_assessment_compensation[]" placeholder="Компенсационные меры">
                 </div>
             </div>
-            <button type="button" onclick="addRow('critical_elements')">Добавить элемент</button>
+            <button type="button" onclick="addRow('protection_assessment')">Добавить элемент</button>
         </div>
-
-        <button type="submit" class="submit-button">Сгенерировать паспорт</button>
+        <p><button type="submit" class="submit-button">Сгенерировать паспорт</button></p>
     </form>
-
     <script>
         function addRow(tableId) {
             const table = document.getElementById(tableId);
