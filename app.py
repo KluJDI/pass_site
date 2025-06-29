@@ -98,9 +98,14 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы (новый формат для objects_on_territory, старый для остальных)
+        # Таблицы
         table_fields = {
-            'objects_on_territory': json.loads(request.form.get('objects_inside', '[]')) if request.form.get('objects_inside') else [],
+            'objects_on_territory': {
+                'name': request.form.getlist('object_on_territory_name[]'),
+                'details': request.form.getlist('object_on_territory_details[]'),
+                'location': request.form.getlist('object_on_territory_location[]'),
+                'security': request.form.getlist('object_on_territory_security[]')
+            },
             'objects_nearby': {
                 'name': request.form.getlist('object_nearby_name[]'),
                 'details': request.form.getlist('object_nearby_details[]'),
@@ -146,36 +151,50 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены текстовых заполнителей
-        def replace_placeholders(doc, fields):
-            for para in doc.paragraphs:
-                original_text = para.text.strip()
+        # Функция замены текстовых заполнителей с сохранением структуры
+        def replace_placeholders(doc, fields, table_fields):
+            def replace_in_text(text, fields, table_fields):
+                if not text:
+                    return text
+                # Замена простых полей
                 for key, placeholder in text_fields.items():
-                    if placeholder in original_text:
+                    if placeholder in text:
                         value = fields.get(key, '').strip()
                         if value:
-                            para.text = original_text.replace(placeholder, value)
+                            text = text.replace(placeholder, value)
                         else:
-                            para.text = original_text  # Сохраняем подчёркивания
-                        para.alignment = 1  # Выравнивание по центру
-                        logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
+                            text = text.replace(placeholder, "")  # Убираем подчёркивания, если данных нет
+                # Замена плейсхолдеров для таблиц (например, {objects_on_territory[0].name})
+                for table_key, table_data in table_fields.items():
+                    row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
+                    for i in range(row_count):
+                        for sub_key in table_data.keys():
+                            placeholder = f"{{{table_key}[{i}].{sub_key}}}"
+                            if placeholder in text:
+                                value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
+                                text = text.replace(placeholder, str(value))
+                return text
+
+            for para in doc.paragraphs:
+                original_text = para.text.strip()
+                new_text = replace_in_text(original_text, fields, table_fields)
+                if new_text != original_text:
+                    para.text = new_text
+                    para.alignment = 1  # Выравнивание по центру
+                    logger.info(f"Замена в параграфе: '{original_text}' -> '{new_text}'")
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
                             original_text = para.text.strip()
-                            for key, placeholder in text_fields.items():
-                                if placeholder in original_text:
-                                    value = fields.get(key, '').strip()
-                                    if value:
-                                        para.text = original_text.replace(placeholder, value)
-                                    else:
-                                        para.text = original_text  # Сохраняем подчёркивания
-                                    para.alignment = 1  # Выравнивание по центру
-                                    logger.info(f"Замена в таблице: '{original_text}' -> '{para.text}' (ключ: {key})")
+                            new_text = replace_in_text(original_text, fields, table_fields)
+                            if new_text != original_text:
+                                para.text = new_text
+                                para.alignment = 1  # Выравнивание по центру
+                                logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
 
         # Замена текстовых заполнителей
-        replace_placeholders(doc, fields)
+        replace_placeholders(doc, fields, table_fields)
 
         # Функция обновления таблиц
         def update_table(table_index, field_data, column_count, has_number_column=True):
@@ -195,8 +214,8 @@ def generate():
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
 
-                # Обработка данных
-                row_count = len(field_data) if isinstance(field_data, list) else max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
+                # Добавляем строки только если есть данные
+                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
                 if row_count == 0:
                     logger.info(f"Нет данных для таблицы {table_index}, строка не добавлена")
                     return
@@ -205,32 +224,22 @@ def generate():
                     row = table.add_row()
                     cell_offset = 1 if has_number_column else 0
                     if has_number_column:
-                        if isinstance(field_data, list) and i < len(field_data) and 'num' in field_data[i]:
-                            row.cells[0].text = str(field_data[i]['num'])
-                        else:
-                            row.cells[0].text = str(i + 1)
+                        row.cells[0].text = str(i + 1)
                         for para in row.cells[0].paragraphs:
                             para.alignment = 1  # Выравнивание по центру
-                    if isinstance(field_data, list) and i < len(field_data):
-                        obj = field_data[i]
-                        row.cells[cell_offset + 0].text = obj.get('name', '')
-                        row.cells[cell_offset + 1].text = obj.get('details', '')
-                        row.cells[cell_offset + 2].text = obj.get('location', '')
-                        row.cells[cell_offset + 3].text = obj.get('security', '')
-                    else:
-                        for j, key in enumerate(['name', 'details', 'location', 'security']):
-                            if j < column_count:
-                                value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                                row.cells[j + cell_offset].text = value
-                                for para in row.cells[j + cell_offset].paragraphs:
-                                    para.alignment = 1  # Выравнивание по центру
+                    for j, key in enumerate(field_data.keys()):
+                        if j < column_count:
+                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
+                            row.cells[j + cell_offset].text = value
+                            for para in row.cells[j + cell_offset].paragraphs:
+                                para.alignment = 1  # Выравнивание по центру
 
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
         # Обновляем таблицы
-        update_table(0, table_fields['objects_on_territory'], 4)  # Новый формат для объектов на территории
+        update_table(0, table_fields['objects_on_territory'], 4)
         update_table(1, table_fields['objects_nearby'], 4)
         update_table(2, table_fields['transport'], 3)
         update_table(3, table_fields['service_orgs'], 3)
