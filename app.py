@@ -96,52 +96,52 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы
+        # Таблицы (обновляем имена полей для соответствия плейсхолдерам)
         table_fields = {
             'objects_on_territory': {
-                'num': request.form.getlist('object_on_territory_num[]') if 'object_on_territory_num[]' in request.form else [''],
+                'num': request.form.getlist('object_on_territory_num[]'),
                 'name': request.form.getlist('object_on_territory_name[]'),
                 'details': request.form.getlist('object_on_territory_details[]'),
                 'location': request.form.getlist('object_on_territory_location[]'),
                 'security': request.form.getlist('object_on_territory_security[]')
             },
             'objects_nearby': {
-                'num': request.form.getlist('object_nearby_num[]') if 'object_nearby_num[]' in request.form else [''],
+                'num': request.form.getlist('object_nearby_num[]'),
                 'name': request.form.getlist('object_nearby_name[]'),
-                'details': request.form.getlist('object_nearby_details[]'),
-                'side': request.form.getlist('object_nearby_side[]'),
+                'characteristics': request.form.getlist('object_nearby_details[]'),  # Исправлено с 'details' на 'characteristics'
+                'location': request.form.getlist('object_nearby_side[]'),  # Исправлено с 'side' на 'location'
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
-            'transport': {
+            'transport_communications': {  # Изменяем с 'transport' на 'transport_communications'
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
-            'service_orgs': {
+            'service_organizations': {  # Изменяем с 'service_orgs' на 'service_organizations'
                 'name': request.form.getlist('service_org_name[]'),
                 'activity': request.form.getlist('service_org_activity[]'),
                 'schedule': request.form.getlist('service_org_schedule[]')
             },
-            'dangerous_sections': {
+            'dangerous_areas': {  # Изменяем с 'dangerous_sections' на 'dangerous_areas'
                 'name': request.form.getlist('dangerous_section_name[]'),
-                'workers': request.form.getlist('dangerous_section_workers[]'),
-                'risk': request.form.getlist('dangerous_section_risk[]')
+                'worker_count': request.form.getlist('dangerous_section_workers[]'),  # Исправлено с 'workers' на 'worker_count'
+                'emergency_type': request.form.getlist('dangerous_section_risk[]')  # Исправлено с 'risk' на 'emergency_type'
             },
-            'consequences': {
-                'name': request.form.getlist('threat_name[]'),
-                'victims': request.form.getlist('threat_victims[]'),
-                'scale': request.form.getlist('threat_scale[]')
+            'terror_consequences': {  # Изменяем с 'consequences' на 'terror_consequences'
+                'threat': request.form.getlist('threat_name[]'),  # Исправлено с 'name' на 'threat'
+                'victims_count': request.form.getlist('threat_victims[]'),  # Исправлено с 'victims' на 'victims_count'
+                'consequence_scale': request.form.getlist('threat_scale[]')  # Исправлено с 'scale' на 'consequence_scale'
             },
-            'patrol_composition': {
-                'type': request.form.getlist('patrol_type[]'),
+            'security_posts': {  # Изменяем с 'patrol_composition' на 'security_posts'
+                'post_type': request.form.getlist('patrol_type[]'),
                 'units': request.form.getlist('patrol_units[]'),
-                'people': request.form.getlist('patrol_people[]')
+                'persons': request.form.getlist('patrol_people[]')
             },
-            'critical_elements': {
-                'name': request.form.getlist('critical_element_name[]'),
+            'protection_assessment': {  # Изменяем с 'critical_elements' на 'protection_assessment'
+                'element_name': request.form.getlist('critical_element_name[]'),
                 'requirements': request.form.getlist('critical_element_requirements[]'),
                 'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
-                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
+                'terror_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
                 'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
                 'compensation': request.form.getlist('critical_element_compensation[]')
             }
@@ -161,7 +161,7 @@ def generate():
                     if placeholder in text:
                         value = fields.get(key, '').strip()
                         text = text.replace(placeholder, value if value else "")
-                # Замена плейсхолдеров для таблиц (например, {objects_on_territory[0].name})
+                # Замена плейсхолдеров для таблиц
                 for table_key, table_data in table_fields.items():
                     row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
                     for i in range(row_count):
