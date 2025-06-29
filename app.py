@@ -66,7 +66,7 @@ def generate():
             'illegal_actions_a': '___________________________________________________________________',
             'diversion_manifestations_b': '____________________________________________________________________',
             'security_forces_a': '___________________________________________________________________',
-            'patburgoфтаpatrol_routes_b': '___________________________________________________________________',
+            'patrol_routes_b': '___________________________________________________________________',
             'stationary_posts_b': '___________________________________________________________________',
             'public_guards_d': '___________________________________________________________________',
             'security_equipment_e': '__________________________________________________________________',
@@ -179,22 +179,29 @@ def generate():
         # Функция для заполнения таблиц
         def fill_tables(doc, table_fields):
             table_map = {
-                'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security']},
-                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'characteristics', 'location', 'distance']},
-                'transport_communications': {'index': 2, 'fields': ['num', 'type', 'name', 'distance']},
-                'service_organizations': {'index': 3, 'fields': ['num', 'name', 'activity', 'schedule']},
-                'dangerous_areas': {'index': 4, 'fields': ['num', 'name', 'worker_count', 'emergency_type']},
-                'terror_consequences': {'index': 5, 'fields': ['num', 'threat', 'victims_count', 'consequence_scale']},
-                'security_posts': {'index': 6, 'fields': ['post_type', 'units', 'persons']},
-                'protection_assessment': {'index': 7, 'fields': ['num', 'element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation']}
+                'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security'], 'expected_columns': 5},
+                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'characteristics', 'location', 'distance'], 'expected_columns': 5},
+                'transport_communications': {'index': 2, 'fields': ['num', 'type', 'name', 'distance'], 'expected_columns': 4},
+                'service_organizations': {'index': 3, 'fields': ['num', 'name', 'activity', 'schedule'], 'expected_columns': 4},
+                'dangerous_areas': {'index': 4, 'fields': ['num', 'name', 'worker_count', 'emergency_type'], 'expected_columns': 4},
+                'terror_consequences': {'index': 5, 'fields': ['num', 'threat', 'victims_count', 'consequence_scale'], 'expected_columns': 4},
+                'security_posts': {'index': 6, 'fields': ['post_type', 'units', 'persons'], 'expected_columns': 3},
+                'protection_assessment': {'index': 7, 'fields': ['num', 'element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation'], 'expected_columns': 7}
             }
 
             for table_key, table_info in table_map.items():
                 table_index = table_info['index']
+                expected_columns = table_info['expected_columns']
                 if table_index >= len(doc.tables):
                     logger.error(f"Таблица {table_key} с индексом {table_index} не найдена. Всего таблиц: {len(doc.tables)}")
                     continue
+
                 table = doc.tables[table_index]
+                if len(table.columns) != expected_columns:
+                    logger.error(f"Таблица {table_key} имеет {len(table.columns)} столбцов, ожидалось {expected_columns}")
+                    continue
+
+                logger.info(f"Обработка таблицы {table_key} (индекс: {table_index}, столбцов: {len(table.columns)})")
                 data = table_fields[table_key]
                 row_count = max(len(data[field]) for field in data if data[field]) if any(data[field] for field in data) else 0
 
@@ -210,6 +217,10 @@ def generate():
                 for i in range(row_count):
                     row = table.add_row()
                     cells = row.cells
+                    if len(cells) != expected_columns:
+                        logger.error(f"Таблица {table_key}: новая строка имеет {len(cells)} столбцов, ожидалось {expected_columns}")
+                        continue
+
                     for j, field in enumerate(table_info['fields']):
                         value = data[field][i] if i < len(data[field]) else ""
                         cells[j].text = str(value) if value else ""
@@ -222,17 +233,21 @@ def generate():
                             total_units += int(data['units'][i]) if data['units'][i] else 0
                             total_persons += int(data['persons'][i]) if data['persons'][i] else 0
                         except ValueError:
-                            pass
+                            logger.warning(f"Некорректное значение для units или persons в таблице {table_key}, строка {i}")
 
                 # Для таблицы security_posts добавляем итоговую строку
                 if table_key == 'security_posts':
                     row = table.add_row()
                     cells = row.cells
+                    if len(cells) != expected_columns:
+                        logger.error(f"Таблица {table_key}: итоговая строка имеет {len(cells)} столбцов, ожидалось {expected_columns}")
+                        continue
                     cells[0].text = "Всего"
                     cells[1].text = str(total_units)
                     cells[2].text = str(total_persons)
                     for para in cells[0].paragraphs + cells[1].paragraphs + cells[2].paragraphs:
                         para.alignment = 1
+                    logger.info(f"Добавлена итоговая строка в таблицу {table_key}: Всего = {total_units} единиц, {total_persons} человек")
 
         # Заменяем текстовые плейсхолдеры
         replace_text_placeholders(doc, fields)
