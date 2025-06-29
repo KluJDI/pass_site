@@ -3,6 +3,7 @@ from docx import Document
 import io
 import os
 import logging
+import re
 
 app = Flask(__name__)
 
@@ -158,23 +159,35 @@ def generate():
 
         # Функция для замены текстовых плейсхолдеров
         def replace_text_placeholders(doc, fields):
+            # Нормализация плейсхолдеров (замена неразрывных пробелов и т.д.)
+            def normalize_text(text):
+                return re.sub(r'\s+', ' ', text.strip()) if text else ''
+
+            # Обработка параграфов
             for para in doc.paragraphs:
                 for key, placeholder in text_fields.items():
-                    if placeholder in para.text:
-                        value = fields.get(key, '').strip()
-                        para.text = para.text.replace(placeholder, value if value else "")
-                        para.alignment = 1  # Выравнивание по центру
-                        logger.info(f"Замена в параграфе: '{placeholder}' -> '{value}'")
+                    normalized_placeholder = normalize_text(placeholder)
+                    for run in para.runs:
+                        normalized_run_text = normalize_text(run.text)
+                        if normalized_placeholder in normalized_run_text:
+                            value = fields.get(key, '').strip()
+                            run.text = run.text.replace(placeholder, value if value else "")
+                            logger.info(f"Замена в параграфе: '{placeholder}' -> '{value}'")
+            
+            # Обработка таблиц
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
                             for key, placeholder in text_fields.items():
-                                if placeholder in para.text:
-                                    value = fields.get(key, '').strip()
-                                    para.text = para.text.replace(placeholder, value if value else "")
-                                    para.alignment = 1  # Выравнивание по центру
-                                    logger.info(f"Замена в таблице: '{placeholder}' -> '{value}'")
+                                normalized_placeholder = normalize_text(placeholder)
+                                for run in para.runs:
+                                    normalized_run_text = normalize_text(run.text)
+                                    if normalized_placeholder in normalized_run_text:
+                                        value = fields.get(key, '').strip()
+                                        run.text = run.text.replace(placeholder, value if value else "")
+                                        para.alignment = 1  # Выравнивание по центру
+                                        logger.info(f"Замена в таблице: '{placeholder}' -> '{value}'")
 
         # Функция для заполнения таблиц
         def fill_tables(doc, table_fields):
