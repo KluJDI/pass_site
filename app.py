@@ -97,59 +97,54 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы
+        # Таблицы (синхронизированы с index.html)
         table_fields = {
             'objects_on_territory': {
-                'num': request.form.getlist('object_on_territory_num[]'),
+                'num': request.form.getlist('object_on_territory_num[]') if 'object_on_territory_num[]' in request.form else [''],
                 'name': request.form.getlist('object_on_territory_name[]'),
                 'details': request.form.getlist('object_on_territory_details[]'),
                 'location': request.form.getlist('object_on_territory_location[]'),
                 'security': request.form.getlist('object_on_territory_security[]')
             },
             'objects_nearby': {
-                'num': request.form.getlist('object_nearby_num[]'),
+                'num': request.form.getlist('object_nearby_num[]') if 'object_nearby_num[]' in request.form else [''],
                 'name': request.form.getlist('object_nearby_name[]'),
-                'characteristics': request.form.getlist('object_nearby_characteristics[]'),
-                'location': request.form.getlist('object_nearby_location[]'),
+                'details': request.form.getlist('object_nearby_details[]'),
+                'side': request.form.getlist('object_nearby_side[]'),
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
-            'transport_communications': {
-                'num': request.form.getlist('transport_num[]'),
+            'transport': {
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
-            'service_organizations': {
-                'num': request.form.getlist('service_org_num[]'),
+            'service_orgs': {
                 'name': request.form.getlist('service_org_name[]'),
                 'activity': request.form.getlist('service_org_activity[]'),
                 'schedule': request.form.getlist('service_org_schedule[]')
             },
-            'dangerous_areas': {
-                'num': request.form.getlist('dangerous_area_num[]'),
-                'name': request.form.getlist('dangerous_area_name[]'),
-                'worker_count': request.form.getlist('dangerous_area_worker_count[]'),
-                'emergency_type': request.form.getlist('dangerous_area_emergency_type[]')
+            'dangerous_sections': {
+                'name': request.form.getlist('dangerous_section_name[]'),
+                'workers': request.form.getlist('dangerous_section_workers[]'),
+                'risk': request.form.getlist('dangerous_section_risk[]')
             },
-            'terror_consequences': {
-                'num': request.form.getlist('terror_consequence_num[]'),
-                'threat': request.form.getlist('terror_consequence_threat[]'),
-                'victims_count': request.form.getlist('terror_consequence_victims_count[]'),
-                'consequence_scale': request.form.getlist('terror_consequence_consequence_scale[]')
+            'consequences': {
+                'name': request.form.getlist('threat_name[]'),
+                'victims': request.form.getlist('threat_victims[]'),
+                'scale': request.form.getlist('threat_scale[]')
             },
-            'security_posts': {
-                'post_type': request.form.getlist('security_post_type[]'),
-                'units': request.form.getlist('security_post_units[]'),
-                'persons': request.form.getlist('security_post_persons[]')
+            'patrol_composition': {
+                'type': request.form.getlist('patrol_type[]'),
+                'units': request.form.getlist('patrol_units[]'),
+                'people': request.form.getlist('patrol_people[]')
             },
-            'protection_assessment': {
-                'num': request.form.getlist('protection_assessment_num[]'),
-                'element_name': request.form.getlist('protection_assessment_element_name[]'),
-                'requirements': request.form.getlist('protection_assessment_requirements[]'),
-                'physical_protection': request.form.getlist('protection_assessment_physical_protection[]'),
-                'terror_prevention': request.form.getlist('protection_assessment_terror_prevention[]'),
-                'sufficiency': request.form.getlist('protection_assessment_sufficiency[]'),
-                'compensation': request.form.getlist('protection_assessment_compensation[]')
+            'critical_elements': {
+                'name': request.form.getlist('critical_element_name[]'),
+                'requirements': request.form.getlist('critical_element_requirements[]'),
+                'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
+                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
+                'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
+                'compensation': request.form.getlist('critical_element_compensation[]')
             }
         }
 
@@ -159,11 +154,9 @@ def generate():
 
         # Функция для замены текстовых плейсхолдеров
         def replace_text_placeholders(doc, fields):
-            # Нормализация плейсхолдеров (замена неразрывных пробелов и т.д.)
             def normalize_text(text):
                 return re.sub(r'\s+', ' ', text.strip()) if text else ''
 
-            # Обработка параграфов
             for para in doc.paragraphs:
                 for key, placeholder in text_fields.items():
                     normalized_placeholder = normalize_text(placeholder)
@@ -172,9 +165,9 @@ def generate():
                         if normalized_placeholder in normalized_run_text:
                             value = fields.get(key, '').strip()
                             run.text = run.text.replace(placeholder, value if value else "")
+                            para.alignment = 1  # Выравнивание по центру
                             logger.info(f"Замена в параграфе: '{placeholder}' -> '{value}'")
-            
-            # Обработка таблиц
+
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
@@ -193,13 +186,13 @@ def generate():
         def fill_tables(doc, table_fields):
             table_map = {
                 'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security'], 'expected_columns': 5},
-                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'characteristics', 'location', 'distance'], 'expected_columns': 5},
-                'transport_communications': {'index': 2, 'fields': ['num', 'type', 'name', 'distance'], 'expected_columns': 4},
-                'service_organizations': {'index': 3, 'fields': ['num', 'name', 'activity', 'schedule'], 'expected_columns': 4},
-                'dangerous_areas': {'index': 4, 'fields': ['num', 'name', 'worker_count', 'emergency_type'], 'expected_columns': 4},
-                'terror_consequences': {'index': 5, 'fields': ['num', 'threat', 'victims_count', 'consequence_scale'], 'expected_columns': 4},
-                'security_posts': {'index': 6, 'fields': ['post_type', 'units', 'persons'], 'expected_columns': 3},
-                'protection_assessment': {'index': 7, 'fields': ['num', 'element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation'], 'expected_columns': 7}
+                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'details', 'side', 'distance'], 'expected_columns': 5},
+                'transport': {'index': 2, 'fields': ['type', 'name', 'distance'], 'expected_columns': 3},
+                'service_orgs': {'index': 3, 'fields': ['name', 'activity', 'schedule'], 'expected_columns': 3},
+                'dangerous_sections': {'index': 4, 'fields': ['name', 'workers', 'risk'], 'expected_columns': 3},
+                'consequences': {'index': 5, 'fields': ['name', 'victims', 'scale'], 'expected_columns': 3},
+                'patrol_composition': {'index': 6, 'fields': ['type', 'units', 'people'], 'expected_columns': 3},
+                'critical_elements': {'index': 7, 'fields': ['name', 'requirements', 'physical_protection', 'terrorism_prevention', 'sufficiency', 'compensation'], 'expected_columns': 6}
             }
 
             for table_key, table_info in table_map.items():
@@ -218,7 +211,7 @@ def generate():
                 data = table_fields[table_key]
                 row_count = max(len(data[field]) for field in data if data[field]) if any(data[field] for field in data) else 0
 
-                if table_key == 'security_posts':
+                if table_key == 'patrol_composition':
                     row_count = min(row_count, 5)  # Ограничиваем до 5 строк
                     total_units, total_persons = 0, 0
 
@@ -241,15 +234,15 @@ def generate():
                             para.alignment = 1  # Выравнивание по центру
                         logger.info(f"Добавлена строка в таблицу {table_key}: {field} = {value}")
 
-                    if table_key == 'security_posts':
+                    if table_key == 'patrol_composition':
                         try:
                             total_units += int(data['units'][i]) if data['units'][i] else 0
-                            total_persons += int(data['persons'][i]) if data['persons'][i] else 0
+                            total_persons += int(data['people'][i]) if data['people'][i] else 0
                         except ValueError:
-                            logger.warning(f"Некорректное значение для units или persons в таблице {table_key}, строка {i}")
+                            logger.warning(f"Некорректное значение для units или people в таблице {table_key}, строка {i}")
 
-                # Для таблицы security_posts добавляем итоговую строку
-                if table_key == 'security_posts':
+                # Для таблицы patrol_composition добавляем итоговую строку
+                if table_key == 'patrol_composition':
                     row = table.add_row()
                     cells = row.cells
                     if len(cells) != expected_columns:
@@ -261,6 +254,10 @@ def generate():
                     for para in cells[0].paragraphs + cells[1].paragraphs + cells[2].paragraphs:
                         para.alignment = 1
                     logger.info(f"Добавлена итоговая строка в таблицу {table_key}: Всего = {total_units} единиц, {total_persons} человек")
+
+        # Загружаем шаблон
+        doc = Document(template_path)
+        logger.info(f"Шаблон успешно загружен. Количество таблиц: {len(doc.tables)}")
 
         # Заменяем текстовые плейсхолдеры
         replace_text_placeholders(doc, fields)
