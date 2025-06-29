@@ -3,7 +3,6 @@ from docx import Document
 import io
 import os
 import logging
-import re
 
 app = Flask(__name__)
 
@@ -97,7 +96,7 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы (синхронизированы с index.html и шаблоном)
+        # Таблицы
         table_fields = {
             'objects_on_territory': {
                 'num': request.form.getlist('object_on_territory_num[]') if 'object_on_territory_num[]' in request.form else [''],
@@ -114,25 +113,21 @@ def generate():
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
             'transport': {
-                'num': [''] * len(request.form.getlist('transport_type[]')),  # Автогенерация num
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
             'service_orgs': {
-                'num': [''] * len(request.form.getlist('service_org_name[]')),  # Автогенерация num
                 'name': request.form.getlist('service_org_name[]'),
                 'activity': request.form.getlist('service_org_activity[]'),
                 'schedule': request.form.getlist('service_org_schedule[]')
             },
             'dangerous_sections': {
-                'num': [''] * len(request.form.getlist('dangerous_section_name[]')),  # Автогенерация num
                 'name': request.form.getlist('dangerous_section_name[]'),
                 'workers': request.form.getlist('dangerous_section_workers[]'),
                 'risk': request.form.getlist('dangerous_section_risk[]')
             },
             'consequences': {
-                'num': [''] * len(request.form.getlist('threat_name[]')),  # Автогенерация num
                 'name': request.form.getlist('threat_name[]'),
                 'victims': request.form.getlist('threat_victims[]'),
                 'scale': request.form.getlist('threat_scale[]')
@@ -143,7 +138,6 @@ def generate():
                 'people': request.form.getlist('patrol_people[]')
             },
             'critical_elements': {
-                'num': [''] * len(request.form.getlist('critical_element_name[]')),  # Автогенерация num
                 'name': request.form.getlist('critical_element_name[]'),
                 'requirements': request.form.getlist('critical_element_requirements[]'),
                 'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
@@ -155,120 +149,49 @@ def generate():
 
         # Загружаем шаблон
         doc = Document(template_path)
-        logger.info(f"Шаблон успешно загружен. Количество таблиц: {len(doc.tables)}")
+        logger.info("Шаблон успешно загружен")
 
-        # Функция для замены текстовых плейсхолдеров
-        def replace_text_placeholders(doc, fields):
-            def replace_in_text(text, fields):
+        # Функция рекурсивной замены плейсхолдеров
+        def replace_placeholders(doc, fields, table_fields):
+            def replace_in_text(text, fields, table_fields):
                 if not text:
                     return text
+                # Замена простых полей
                 for key, placeholder in text_fields.items():
                     if placeholder in text:
                         value = fields.get(key, '').strip()
                         text = text.replace(placeholder, value if value else "")
-                        logger.info(f"Замена текста: '{placeholder}' -> '{value}'")
+                # Замена плейсхолдеров для таблиц (например, {objects_on_territory[0].name})
+                for table_key, table_data in table_fields.items():
+                    row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
+                    for i in range(row_count):
+                        for sub_key in table_data.keys():
+                            placeholder = f"{{{table_key}[{i}].{sub_key}}}"
+                            if placeholder in text:
+                                value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
+                                text = text.replace(placeholder, str(value))
                 return text
 
             for para in doc.paragraphs:
                 original_text = para.text
-                new_text = replace_in_text(original_text, fields)
+                new_text = replace_in_text(original_text, fields, table_fields)
                 if new_text != original_text:
                     para.text = new_text
                     para.alignment = 1  # Выравнивание по центру
                     logger.info(f"Замена в параграфе: '{original_text}' -> '{new_text}'")
-
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
                             original_text = para.text
-                            new_text = replace_in_text(original_text, fields)
+                            new_text = replace_in_text(original_text, fields, table_fields)
                             if new_text != original_text:
                                 para.text = new_text
                                 para.alignment = 1  # Выравнивание по центру
                                 logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
 
-        # Функция для заполнения таблиц
-        def fill_tables(doc, table_fields):
-            table_map = {
-                'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security'], 'expected_columns': 5},
-                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'details', 'side', 'distance'], 'expected_columns': 5},
-                'transport': {'index': 2, 'fields': ['num', 'type', 'name', 'distance'], 'expected_columns': 4},
-                'service_orgs': {'index': 3, 'fields': ['num', 'name', 'activity', 'schedule'], 'expected_columns': 4},
-                'dangerous_sections': {'index': 4, 'fields': ['num', 'name', 'workers', 'risk'], 'expected_columns': 4},
-                'consequences': {'index': 5, 'fields': ['num', 'name', 'victims', 'scale'], 'expected_columns': 4},
-                'patrol_composition': {'index': 6, 'fields': ['type', 'units', 'people'], 'expected_columns': 3},
-                'critical_elements': {'index': 7, 'fields': ['num', 'name', 'requirements', 'physical_protection', 'terrorism_prevention', 'sufficiency', 'compensation'], 'expected_columns': 7}
-            }
-
-            for table_key, table_info in table_map.items():
-                table_index = table_info['index']
-                expected_columns = table_info['expected_columns']
-                if table_index >= len(doc.tables):
-                    logger.error(f"Таблица {table_key} с индексом {table_index} не найдена. Всего таблиц: {len(doc.tables)}")
-                    continue
-
-                table = doc.tables[table_index]
-                if len(table.columns) != expected_columns:
-                    logger.error(f"Таблица {table_key} имеет {len(table.columns)} столбцов, ожидалось {expected_columns}")
-                    continue
-
-                logger.info(f"Обработка таблицы {table_key} (индекс: {table_index}, столбцов: {len(table.columns)})")
-                data = table_fields[table_key]
-                row_count = max(len(data[field]) for field in data if data[field]) if any(data[field] for field in data) else 0
-
-                # Автогенерация номеров строк для таблиц с num
-                if 'num' in data:
-                    data['num'] = [str(i + 1) for i in range(row_count)]
-
-                if table_key == 'patrol_composition':
-                    row_count = min(row_count, 5)  # Ограничиваем до 5 строк
-                    total_units, total_persons = 0, 0
-
-                # Очищаем существующие строки (кроме заголовка)
-                while len(table.rows) > 1:
-                    table._element.remove(table.rows[-1]._element)
-
-                # Добавляем новые строки
-                for i in range(row_count):
-                    row = table.add_row()
-                    cells = row.cells
-                    if len(cells) != expected_columns:
-                        logger.error(f"Таблица {table_key}: новая строка имеет {len(cells)} столбцов, ожидалось {expected_columns}")
-                        continue
-
-                    for j, field in enumerate(table_info['fields']):
-                        value = data[field][i] if i < len(data[field]) else ""
-                        cells[j].text = str(value) if value else ""
-                        for para in cells[j].paragraphs:
-                            para.alignment = 1  # Выравнивание по центру
-                        logger.info(f"Добавлена строка в таблицу {table_key}: {field} = {value}")
-
-                    if table_key == 'patrol_composition':
-                        try:
-                            total_units += int(data['units'][i]) if data['units'][i] else 0
-                            total_persons += int(data['people'][i]) if data['people'][i] else 0
-                        except ValueError:
-                            logger.warning(f"Некорректное значение для units или people в таблице {table_key}, строка {i}")
-
-                # Для таблицы patrol_composition добавляем итоговую строку
-                if table_key == 'patrol_composition':
-                    row = table.add_row()
-                    cells = row.cells
-                    if len(cells) != expected_columns:
-                        logger.error(f"Таблица {table_key}: итоговая строка имеет {len(cells)} столбцов, ожидалось {expected_columns}")
-                        continue
-                    cells[0].text = "Всего"
-                    cells[1].text = str(total_units)
-                    cells[2].text = str(total_persons)
-                    for para in cells[0].paragraphs + cells[1].paragraphs + cells[2].paragraphs:
-                        para.alignment = 1
-                    logger.info(f"Добавлена итоговая строка в таблицу {table_key}: Всего = {total_units} единиц, {total_persons} человек")
-
-        # Заменяем текстовые плейсхолдеры
-        replace_text_placeholders(doc, fields)
-        # Заполняем таблицы
-        fill_tables(doc, table_fields)
+        # Замена всех плейсхолдеров
+        replace_placeholders(doc, fields, table_fields)
 
         # Сохраняем документ
         output = io.BytesIO()
