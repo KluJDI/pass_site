@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, render_template
+from flask import Flask, render_template, request, send_file
 from docx import Document
 import io
 import os
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def form():
     logger.info("Открыта страница формы")
     try:
-        return render_template('index.html')
+        return render_template('form.html')
     except Exception as e:
         logger.error(f"Ошибка при рендеринге формы: {str(e)}")
         return "Ошибка загрузки формы", 500
@@ -99,51 +99,56 @@ def generate():
         # Таблицы
         table_fields = {
             'objects_on_territory': {
-                'num': request.form.getlist('object_on_territory_num[]') if 'object_on_territory_num[]' in request.form else [''],
+                'num': request.form.getlist('object_on_territory_num[]'),
                 'name': request.form.getlist('object_on_territory_name[]'),
                 'details': request.form.getlist('object_on_territory_details[]'),
                 'location': request.form.getlist('object_on_territory_location[]'),
                 'security': request.form.getlist('object_on_territory_security[]')
             },
             'objects_nearby': {
-                'num': request.form.getlist('object_nearby_num[]') if 'object_nearby_num[]' in request.form else [''],
+                'num': request.form.getlist('object_nearby_num[]'),
                 'name': request.form.getlist('object_nearby_name[]'),
-                'details': request.form.getlist('object_nearby_details[]'),
-                'side': request.form.getlist('object_nearby_side[]'),
+                'characteristics': request.form.getlist('object_nearby_characteristics[]'),
+                'location': request.form.getlist('object_nearby_location[]'),
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
-            'transport': {
+            'transport_communications': {
+                'num': request.form.getlist('transport_num[]'),
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
-            'service_orgs': {
-                'name': request.form.getlist('service_org_name[]'),
-                'activity': request.form.getlist('service_org_activity[]'),
-                'schedule': request.form.getlist('service_org_schedule[]')
+            'service_organizations': {
+                'num': request.form.getlist('service_num[]'),
+                'name': request.form.getlist('service_name[]'),
+                'activity': request.form.getlist('service_activity[]'),
+                'schedule': request.form.getlist('service_schedule[]')
             },
-            'dangerous_sections': {
-                'name': request.form.getlist('dangerous_section_name[]'),
-                'workers': request.form.getlist('dangerous_section_workers[]'),
-                'risk': request.form.getlist('dangerous_section_risk[]')
+            'dangerous_areas': {
+                'num': request.form.getlist('dangerous_num[]'),
+                'name': request.form.getlist('dangerous_name[]'),
+                'worker_count': request.form.getlist('dangerous_worker_count[]'),
+                'emergency_type': request.form.getlist('dangerous_emergency_type[]')
             },
-            'consequences': {
-                'name': request.form.getlist('threat_name[]'),
-                'victims': request.form.getlist('threat_victims[]'),
-                'scale': request.form.getlist('threat_scale[]')
+            'terror_consequences': {
+                'num': request.form.getlist('consequences_num[]'),
+                'threat': request.form.getlist('consequences_threat[]'),
+                'victims_count': request.form.getlist('consequences_victims_count[]'),
+                'consequence_scale': request.form.getlist('consequences_consequence_scale[]')
             },
-            'patrol_composition': {
-                'type': request.form.getlist('patrol_type[]'),
-                'units': request.form.getlist('patrol_units[]'),
-                'people': request.form.getlist('patrol_people[]')
+            'security_posts': {
+                'post_type': request.form.getlist('post_post_type[]'),
+                'units': request.form.getlist('post_units[]'),
+                'persons': request.form.getlist('post_persons[]')
             },
-            'critical_elements': {
-                'name': request.form.getlist('critical_element_name[]'),
-                'requirements': request.form.getlist('critical_element_requirements[]'),
-                'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
-                'terrorism_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
-                'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
-                'compensation': request.form.getlist('critical_element_compensation[]')
+            'protection_assessment': {
+                'num': request.form.getlist('assessment_num[]'),
+                'element_name': request.form.getlist('assessment_element_name[]'),
+                'requirements': request.form.getlist('assessment_requirements[]'),
+                'physical_protection': request.form.getlist('assessment_physical_protection[]'),
+                'terror_prevention': request.form.getlist('assessment_terror_prevention[]'),
+                'sufficiency': request.form.getlist('assessment_sufficiency[]'),
+                'compensation': request.form.getlist('assessment_compensation[]')
             }
         }
 
@@ -161,7 +166,7 @@ def generate():
                     if placeholder in text:
                         value = fields.get(key, '').strip()
                         text = text.replace(placeholder, value if value else "")
-                # Замена плейсхолдеров для таблиц (например, {objects_on_territory[0].name})
+                # Замена плейсхолдеров для таблиц
                 for table_key, table_data in table_fields.items():
                     row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
                     for i in range(row_count):
