@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,7 +7,7 @@
     <title>Паспорт безопасности</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font Facet family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
         }
@@ -160,7 +161,7 @@
         <textarea name="patrol_routes_b" placeholder="Введите данные"></textarea>
         <label>Стационарные посты:</label>
         <textarea name="stationary_posts_b" placeholder="Введите данные"></textarea>
-        <label>pl_дружины:</label>
+        <label>Народные дружины:</label>
         <textarea name="public_guards_d" placeholder="Введите данные"></textarea>
         <label>Средства охраны:</label>
         <textarea name="security_equipment_e" placeholder="Введите данные"></textarea>
@@ -254,6 +255,7 @@
             <h2>4. Транспортные коммуникации</h2>
             <div class="table-header">
                 <div class="table-row">
+                    <span>N п/п</span>
                     <span>Вид транспорта</span>
                     <span>Наименование</span>
                     <span>Расстояние</span>
@@ -261,6 +263,7 @@
             </div>
             <div id="transport_communications">
                 <div class="table-row">
+                    <input type="text" name="transport_num[]" placeholder="Номер">
                     <input type="text" name="transport_type[]" placeholder="Вид транспорта">
                     <input type="text" name="transport_name[]" placeholder="Наименование объекта">
                     <input type="text" name="transport_distance[]" placeholder="Расстояние (м)">
@@ -272,6 +275,7 @@
             <h2>5. Организации обслуживания</h2>
             <div class="table-header">
                 <div class="table-row">
+                    <span>N п/п</span>
                     <span>Наименование</span>
                     <span>Деятельность</span>
                     <span>График</span>
@@ -279,6 +283,7 @@
             </div>
             <div id="service_organizations">
                 <div class="table-row">
+                    <input type="text" name="service_org_num[]" placeholder="Номер">
                     <input type="text" name="service_org_name[]" placeholder="Наименование организации">
                     <input type="text" name="service_org_activity[]" placeholder="Вид деятельности">
                     <input type="text" name="service_org_schedule[]" placeholder="График работ">
@@ -290,6 +295,7 @@
             <h2>7. Опасные участки</h2>
             <div class="table-header">
                 <div class="table-row">
+                    <span>N п/п</span>
                     <span>Наименование</span>
                     <span>Работники</span>
                     <span>Риск</span>
@@ -297,8 +303,9 @@
             </div>
             <div id="dangerous_areas">
                 <div class="table-row">
-                    <input type="text" name="dangerous_area_name[]" placeholder="Наименование участка">
-                    <input type="text" name="dangerous_area_worker_count[]" placeholder="Количество работников">
+                    <input type="text" name="dangerous_area_num[]" placeholder="Наименование участка">
+                    <input type="text" name="dangerous_area_name[]" placeholder="Количество работников">
+                    <input type="text" name="dangerous_area_worker_count[]" placeholder="Характер ЧС">
                     <input type="text" name="dangerous_area_emergency_type[]" placeholder="Характер ЧС">
                 </div>
             </div>
@@ -308,6 +315,7 @@
             <h2>9. Последствия террористической угрозы</h2>
             <div class="table-header">
                 <div class="table-row">
+                    <span>N п/п</span>
                     <span>Угроза</span>
                     <span>Пострадавшие</span>
                     <span>Масштаб</span>
@@ -315,8 +323,9 @@
             </div>
             <div id="terror_consequences">
                 <div class="table-row">
-                    <input type="text" name="terror_consequence_threat[]" placeholder="Название угрозы">
-                    <input type="text" name="terror_consequence_victims_count[]" placeholder="Количество пострадавших">
+                    <input type="text" name="terror_consequence_num[]" placeholder="Название угрозы">
+                    <input type="text" name="terror_consequence_threat[]" placeholder="Количество пострадавших">
+                    <input type="text" name="terror_consequence_victims_count[]" placeholder="Масштаб последствий">
                     <input type="text" name="terror_consequence_consequence_scale[]" placeholder="Масштаб последствий">
                 </div>
             </div>
@@ -344,6 +353,7 @@
             <h2>12. Критические элементы</h2>
             <div class="table-header">
                 <div class="table-row">
+                    <span>N п/п</span>
                     <span>Название</span>
                     <span>Требования</span>
                     <span>Физическая защита</span>
@@ -354,6 +364,7 @@
             </div>
             <div id="protection_assessment">
                 <div class="table-row">
+                    <input type="text" name="protection_assessment_num[]" placeholder="Номер">
                     <input type="text" name="protection_assessment_element_name[]" placeholder="Наименование элемента">
                     <input type="text" name="protection_assessment_requirements[]" placeholder="Требования">
                     <input type="text" name="protection_assessment_physical_protection[]" placeholder="Физическая защита">
