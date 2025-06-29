@@ -66,7 +66,7 @@ def generate():
             'illegal_actions_a': '___________________________________________________________________',
             'diversion_manifestations_b': '____________________________________________________________________',
             'security_forces_a': '___________________________________________________________________',
-            'patrol_routes_b': '___________________________________________________________________',
+            'patburgoфтаpatrol_routes_b': '___________________________________________________________________',
             'stationary_posts_b': '___________________________________________________________________',
             'public_guards_d': '___________________________________________________________________',
             'security_equipment_e': '__________________________________________________________________',
@@ -96,7 +96,7 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы (исправленные имена полей для соответствия форме)
+        # Таблицы
         table_fields = {
             'objects_on_territory': {
                 'num': request.form.getlist('object_on_territory_num[]'),
@@ -113,21 +113,25 @@ def generate():
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
             'transport_communications': {
+                'num': request.form.getlist('transport_num[]'),
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
             'service_organizations': {
+                'num': request.form.getlist('service_org_num[]'),
                 'name': request.form.getlist('service_org_name[]'),
                 'activity': request.form.getlist('service_org_activity[]'),
                 'schedule': request.form.getlist('service_org_schedule[]')
             },
             'dangerous_areas': {
+                'num': request.form.getlist('dangerous_area_num[]'),
                 'name': request.form.getlist('dangerous_area_name[]'),
                 'worker_count': request.form.getlist('dangerous_area_worker_count[]'),
                 'emergency_type': request.form.getlist('dangerous_area_emergency_type[]')
             },
             'terror_consequences': {
+                'num': request.form.getlist('terror_consequence_num[]'),
                 'threat': request.form.getlist('terror_consequence_threat[]'),
                 'victims_count': request.form.getlist('terror_consequence_victims_count[]'),
                 'consequence_scale': request.form.getlist('terror_consequence_consequence_scale[]')
@@ -138,6 +142,7 @@ def generate():
                 'persons': request.form.getlist('security_post_persons[]')
             },
             'protection_assessment': {
+                'num': request.form.getlist('protection_assessment_num[]'),
                 'element_name': request.form.getlist('protection_assessment_element_name[]'),
                 'requirements': request.form.getlist('protection_assessment_requirements[]'),
                 'physical_protection': request.form.getlist('protection_assessment_physical_protection[]'),
@@ -149,7 +154,7 @@ def generate():
 
         # Загружаем шаблон
         doc = Document(template_path)
-        logger.info("Шаблон успешно загружен")
+        logger.info(f"Шаблон успешно загружен. Количество таблиц: {len(doc.tables)}")
 
         # Функция для замены текстовых плейсхолдеров
         def replace_text_placeholders(doc, fields):
@@ -176,16 +181,20 @@ def generate():
             table_map = {
                 'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security']},
                 'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'characteristics', 'location', 'distance']},
-                'transport_communications': {'index': 2, 'fields': ['type', 'name', 'distance']},
-                'service_organizations': {'index': 3, 'fields': ['name', 'activity', 'schedule']},
-                'dangerous_areas': {'index': 4, 'fields': ['name', 'worker_count', 'emergency_type']},
-                'terror_consequences': {'index': 5, 'fields': ['threat', 'victims_count', 'consequence_scale']},
+                'transport_communications': {'index': 2, 'fields': ['num', 'type', 'name', 'distance']},
+                'service_organizations': {'index': 3, 'fields': ['num', 'name', 'activity', 'schedule']},
+                'dangerous_areas': {'index': 4, 'fields': ['num', 'name', 'worker_count', 'emergency_type']},
+                'terror_consequences': {'index': 5, 'fields': ['num', 'threat', 'victims_count', 'consequence_scale']},
                 'security_posts': {'index': 6, 'fields': ['post_type', 'units', 'persons']},
-                'protection_assessment': {'index': 7, 'fields': ['element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation']}
+                'protection_assessment': {'index': 7, 'fields': ['num', 'element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation']}
             }
 
             for table_key, table_info in table_map.items():
-                table = doc.tables[table_info['index']]
+                table_index = table_info['index']
+                if table_index >= len(doc.tables):
+                    logger.error(f"Таблица {table_key} с индексом {table_index} не найдена. Всего таблиц: {len(doc.tables)}")
+                    continue
+                table = doc.tables[table_index]
                 data = table_fields[table_key]
                 row_count = max(len(data[field]) for field in data if data[field]) if any(data[field] for field in data) else 0
 
