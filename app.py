@@ -3,6 +3,7 @@ from docx import Document
 import io
 import os
 import logging
+import re
 
 app = Flask(__name__)
 
@@ -156,47 +157,63 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция рекурсивной замены плейсхолдеров
-        def replace_placeholders(doc, fields, table_fields):
-            def replace_in_text(text, fields, table_fields):
-                if not text:
-                    return text
-                # Замена простых полей
-                for key, placeholder in text_fields.items():
-                    if placeholder in text:
-                        value = fields.get(key, '').strip()
-                        text = text.replace(placeholder, value if value else "")
-                # Замена плейсхолдеров для таблиц
-                for table_key, table_data in table_fields.items():
-                    row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
-                    for i in range(row_count):
-                        for sub_key in table_data.keys():
-                            placeholder = f"{{{table_key}[{i}].{sub_key}}}"
-                            if placeholder in text:
-                                value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
-                                text = text.replace(placeholder, str(value))
+        # Функция для замены плейсхолдеров в тексте
+        def replace_text(text, fields, table_fields):
+            if not text:
                 return text
-
-            for para in doc.paragraphs:
-                original_text = para.text
-                new_text = replace_in_text(original_text, fields, table_fields)
-                if new_text != original_text:
-                    para.text = new_text
-                    para.alignment = 1  # Выравнивание по центру
-                    logger.info(f"Замена в параграфе: '{original_text}' -> '{new_text}'")
             
-            for table in doc.tables:
-                for row in table.rows:
-                    for cell in row.cells:
-                        for para in cell.paragraphs:
-                            original_text = para.text
-                            new_text = replace_in_text(original_text, fields, table_fields)
-                            if new_text != original_text:
-                                para.text = new_text
-                                logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
+            # Замена простых полей
+            for key, placeholder in text_fields.items():
+                if placeholder in text:
+                    value = fields.get(key, '').strip()
+                    text = text.replace(placeholder, value if value else "")
+            
+            # Замена плейсхолдеров для таблиц
+            for table_key, table_data in table_fields.items():
+                row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
+                for i in range(row_count):
+                    for sub_key in table_data.keys():
+                        # Обрабатываем оба формата плейсхолдеров: {table[i].key} и {table[i].key}
+                        placeholder1 = f"{{{table_key}[{i}].{sub_key}}}"
+                        placeholder2 = f"{{{table_key}\[{i}\].{sub_key}}}"
+                        if placeholder1 in text or placeholder2 in text:
+                            value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
+                            text = text.replace(placeholder1, str(value)).replace(placeholder2, str(value))
+            return text
 
-        # Замена всех плейсхолдеров
-        replace_placeholders(doc, fields, table_fields)
+        # Функция для замены плейсхолдеров в таблицах
+        def replace_table_placeholders(table, fields, table_fields):
+            for row in table.rows:
+                for cell in row.cells:
+                    for para in cell.paragraphs:
+                        original_text = para.text
+                        new_text = replace_text(original_text, fields, table_fields)
+                        if new_text != original_text:
+                            para.text = new_text
+                            logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
+
+        # Замена плейсхолдеров в параграфах
+        for para in doc.paragraphs:
+            original_text = para.text
+            new_text = replace_text(original_text, fields, table_fields)
+            if new_text != original_text:
+                para.text = new_text
+                para.alignment = 1  # Выравнивание по центру
+                logger.info(f"Замена в параграфе: '{original_text}' -> '{new_text}'")
+
+        # Замена плейсхолдеров в таблицах
+        for table in doc.tables:
+            replace_table_placeholders(table, fields, table_fields)
+
+        # Обработка специальных случаев для таблицы security_posts (итоговая строка)
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    if "Всего" in cell.text and "{security_posts[5].units}" in cell.text:
+                        total_units = sum(int(x) for x in table_fields['security_posts']['units'] if x.isdigit())
+                        total_persons = sum(int(x) for x in table_fields['security_posts']['persons'] if x.isdigit())
+                        cell.text = cell.text.replace("{security_posts[5].units}", str(total_units))
+                        cell.text = cell.text.replace("{security_posts[5].persons}", str(total_persons))
 
         # Сохраняем документ
         output = io.BytesIO()
