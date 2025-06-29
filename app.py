@@ -4,6 +4,7 @@ import io
 import re
 import os
 import logging
+import json
 
 app = Flask(__name__)
 
@@ -97,14 +98,9 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы
+        # Таблицы (новый формат для objects_on_territory, старый для остальных)
         table_fields = {
-            'objects_on_territory': {
-                'name': request.form.getlist('object_on_territory_name[]'),
-                'details': request.form.getlist('object_on_territory_details[]'),
-                'location': request.form.getlist('object_on_territory_location[]'),
-                'security': request.form.getlist('object_on_territory_security[]')
-            },
+            'objects_on_territory': json.loads(request.form.get('objects_inside', '[]')) if request.form.get('objects_inside') else [],
             'objects_nearby': {
                 'name': request.form.getlist('object_nearby_name[]'),
                 'details': request.form.getlist('object_nearby_details[]'),
@@ -150,7 +146,7 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция замены текстовых заполнителей с сохранением структуры
+        # Функция замены текстовых заполнителей
         def replace_placeholders(doc, fields):
             for para in doc.paragraphs:
                 original_text = para.text.strip()
@@ -160,7 +156,7 @@ def generate():
                         if value:
                             para.text = original_text.replace(placeholder, value)
                         else:
-                            para.text = original_text  # Сохраняем подчёркивания, если данных нет
+                            para.text = original_text  # Сохраняем подчёркивания
                         para.alignment = 1  # Выравнивание по центру
                         logger.info(f"Замена в параграфе: '{original_text}' -> '{para.text}' (ключ: {key})")
             for table in doc.tables:
@@ -199,8 +195,8 @@ def generate():
                 while len(table.rows) > 1:
                     table._element.remove(table.rows[-1]._element)
 
-                # Добавляем строки только если есть данные
-                row_count = max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
+                # Обработка данных
+                row_count = len(field_data) if isinstance(field_data, list) else max(len(field_data[key]) for key in field_data if field_data[key]) if any(field_data[key] for key in field_data) else 0
                 if row_count == 0:
                     logger.info(f"Нет данных для таблицы {table_index}, строка не добавлена")
                     return
@@ -209,22 +205,32 @@ def generate():
                     row = table.add_row()
                     cell_offset = 1 if has_number_column else 0
                     if has_number_column:
-                        row.cells[0].text = str(i + 1)
+                        if isinstance(field_data, list) and i < len(field_data) and 'num' in field_data[i]:
+                            row.cells[0].text = str(field_data[i]['num'])
+                        else:
+                            row.cells[0].text = str(i + 1)
                         for para in row.cells[0].paragraphs:
                             para.alignment = 1  # Выравнивание по центру
-                    for j, key in enumerate(field_data.keys()):
-                        if j < column_count:
-                            value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
-                            row.cells[j + cell_offset].text = value
-                            for para in row.cells[j + cell_offset].paragraphs:
-                                para.alignment = 1  # Выравнивание по центру
+                    if isinstance(field_data, list) and i < len(field_data):
+                        obj = field_data[i]
+                        row.cells[cell_offset + 0].text = obj.get('name', '')
+                        row.cells[cell_offset + 1].text = obj.get('details', '')
+                        row.cells[cell_offset + 2].text = obj.get('location', '')
+                        row.cells[cell_offset + 3].text = obj.get('security', '')
+                    else:
+                        for j, key in enumerate(['name', 'details', 'location', 'security']):
+                            if j < column_count:
+                                value = field_data[key][i] if i < len(field_data[key]) and field_data[key][i] else ''
+                                row.cells[j + cell_offset].text = value
+                                for para in row.cells[j + cell_offset].paragraphs:
+                                    para.alignment = 1  # Выравнивание по центру
 
             except Exception as e:
                 logger.error(f"Ошибка при обновлении таблицы {table_index}: {str(e)}")
                 raise
 
         # Обновляем таблицы
-        update_table(0, table_fields['objects_on_territory'], 4)
+        update_table(0, table_fields['objects_on_territory'], 4)  # Новый формат для объектов на территории
         update_table(1, table_fields['objects_nearby'], 4)
         update_table(2, table_fields['transport'], 3)
         update_table(3, table_fields['service_orgs'], 3)
