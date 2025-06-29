@@ -1,3 +1,4 @@
+```python
 from flask import Flask, request, send_file, render_template
 from docx import Document
 import io
@@ -96,7 +97,7 @@ def generate():
         # Собираем данные из формы
         fields = {key: request.form.get(key, '').strip() for key in text_fields}
 
-        # Таблицы (обновляем имена полей для соответствия плейсхолдерам)
+        # Таблицы (исправленные имена полей для соответствия форме)
         table_fields = {
             'objects_on_territory': {
                 'num': request.form.getlist('object_on_territory_num[]'),
@@ -108,42 +109,42 @@ def generate():
             'objects_nearby': {
                 'num': request.form.getlist('object_nearby_num[]'),
                 'name': request.form.getlist('object_nearby_name[]'),
-                'characteristics': request.form.getlist('object_nearby_details[]'),  # Исправлено с 'details' на 'characteristics'
-                'location': request.form.getlist('object_nearby_side[]'),  # Исправлено с 'side' на 'location'
+                'characteristics': request.form.getlist('object_nearby_characteristics[]'),
+                'location': request.form.getlist('object_nearby_location[]'),
                 'distance': request.form.getlist('object_nearby_distance[]')
             },
-            'transport_communications': {  # Изменяем с 'transport' на 'transport_communications'
+            'transport_communications': {
                 'type': request.form.getlist('transport_type[]'),
                 'name': request.form.getlist('transport_name[]'),
                 'distance': request.form.getlist('transport_distance[]')
             },
-            'service_organizations': {  # Изменяем с 'service_orgs' на 'service_organizations'
+            'service_organizations': {
                 'name': request.form.getlist('service_org_name[]'),
                 'activity': request.form.getlist('service_org_activity[]'),
                 'schedule': request.form.getlist('service_org_schedule[]')
             },
-            'dangerous_areas': {  # Изменяем с 'dangerous_sections' на 'dangerous_areas'
-                'name': request.form.getlist('dangerous_section_name[]'),
-                'worker_count': request.form.getlist('dangerous_section_workers[]'),  # Исправлено с 'workers' на 'worker_count'
-                'emergency_type': request.form.getlist('dangerous_section_risk[]')  # Исправлено с 'risk' на 'emergency_type'
+            'dangerous_areas': {
+                'name': request.form.getlist('dangerous_area_name[]'),
+                'worker_count': request.form.getlist('dangerous_area_worker_count[]'),
+                'emergency_type': request.form.getlist('dangerous_area_emergency_type[]')
             },
-            'terror_consequences': {  # Изменяем с 'consequences' на 'terror_consequences'
-                'threat': request.form.getlist('threat_name[]'),  # Исправлено с 'name' на 'threat'
-                'victims_count': request.form.getlist('threat_victims[]'),  # Исправлено с 'victims' на 'victims_count'
-                'consequence_scale': request.form.getlist('threat_scale[]')  # Исправлено с 'scale' на 'consequence_scale'
+            'terror_consequences': {
+                'threat': request.form.getlist('terror_consequence_threat[]'),
+                'victims_count': request.form.getlist('terror_consequence_victims_count[]'),
+                'consequence_scale': request.form.getlist('terror_consequence_consequence_scale[]')
             },
-            'security_posts': {  # Изменяем с 'patrol_composition' на 'security_posts'
-                'post_type': request.form.getlist('patrol_type[]'),
-                'units': request.form.getlist('patrol_units[]'),
-                'persons': request.form.getlist('patrol_people[]')
+            'security_posts': {
+                'post_type': request.form.getlist('security_post_type[]'),
+                'units': request.form.getlist('security_post_units[]'),
+                'persons': request.form.getlist('security_post_persons[]')
             },
-            'protection_assessment': {  # Изменяем с 'critical_elements' на 'protection_assessment'
-                'element_name': request.form.getlist('critical_element_name[]'),
-                'requirements': request.form.getlist('critical_element_requirements[]'),
-                'physical_protection': request.form.getlist('critical_element_physical_protection[]'),
-                'terror_prevention': request.form.getlist('critical_element_terrorism_prevention[]'),
-                'sufficiency': request.form.getlist('critical_element_sufficiency[]'),
-                'compensation': request.form.getlist('critical_element_compensation[]')
+            'protection_assessment': {
+                'element_name': request.form.getlist('protection_assessment_element_name[]'),
+                'requirements': request.form.getlist('protection_assessment_requirements[]'),
+                'physical_protection': request.form.getlist('protection_assessment_physical_protection[]'),
+                'terror_prevention': request.form.getlist('protection_assessment_terror_prevention[]'),
+                'sufficiency': request.form.getlist('protection_assessment_sufficiency[]'),
+                'compensation': request.form.getlist('protection_assessment_compensation[]')
             }
         }
 
@@ -151,47 +152,84 @@ def generate():
         doc = Document(template_path)
         logger.info("Шаблон успешно загружен")
 
-        # Функция рекурсивной замены плейсхолдеров
-        def replace_placeholders(doc, fields, table_fields):
-            def replace_in_text(text, fields, table_fields):
-                if not text:
-                    return text
-                # Замена простых полей
-                for key, placeholder in text_fields.items():
-                    if placeholder in text:
-                        value = fields.get(key, '').strip()
-                        text = text.replace(placeholder, value if value else "")
-                # Замена плейсхолдеров для таблиц
-                for table_key, table_data in table_fields.items():
-                    row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
-                    for i in range(row_count):
-                        for sub_key in table_data.keys():
-                            placeholder = f"{{{table_key}[{i}].{sub_key}}}"
-                            if placeholder in text:
-                                value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
-                                text = text.replace(placeholder, str(value))
-                return text
-
+        # Функция для замены текстовых плейсхолдеров
+        def replace_text_placeholders(doc, fields):
             for para in doc.paragraphs:
-                original_text = para.text
-                new_text = replace_in_text(original_text, fields, table_fields)
-                if new_text != original_text:
-                    para.text = new_text
-                    para.alignment = 1  # Выравнивание по центру
-                    logger.info(f"Замена в параграфе: '{original_text}' -> '{new_text}'")
+                for key, placeholder in text_fields.items():
+                    if placeholder in para.text:
+                        value = fields.get(key, '').strip()
+                        para.text = para.text.replace(placeholder, value if value else "")
+                        para.alignment = 1  # Выравнивание по центру
+                        logger.info(f"Замена в параграфе: '{placeholder}' -> '{value}'")
             for table in doc.tables:
                 for row in table.rows:
                     for cell in row.cells:
                         for para in cell.paragraphs:
-                            original_text = para.text
-                            new_text = replace_in_text(original_text, fields, table_fields)
-                            if new_text != original_text:
-                                para.text = new_text
-                                para.alignment = 1  # Выравнивание по центру
-                                logger.info(f"Замена в таблице: '{original_text}' -> '{new_text}'")
+                            for key, placeholder in text_fields.items():
+                                if placeholder in para.text:
+                                    value = fields.get(key, '').strip()
+                                    para.text = para.text.replace(placeholder, value if value else "")
+                                    para.alignment = 1  # Выравнивание по центру
+                                    logger.info(f"Замена в таблице: '{placeholder}' -> '{value}'")
 
-        # Замена всех плейсхолдеров
-        replace_placeholders(doc, fields, table_fields)
+        # Функция для заполнения таблиц
+        def fill_tables(doc, table_fields):
+            table_map = {
+                'objects_on_territory': {'index': 0, 'fields': ['num', 'name', 'details', 'location', 'security']},
+                'objects_nearby': {'index': 1, 'fields': ['num', 'name', 'characteristics', 'location', 'distance']},
+                'transport_communications': {'index': 2, 'fields': ['type', 'name', 'distance']},
+                'service_organizations': {'index': 3, 'fields': ['name', 'activity', 'schedule']},
+                'dangerous_areas': {'index': 4, 'fields': ['name', 'worker_count', 'emergency_type']},
+                'terror_consequences': {'index': 5, 'fields': ['threat', 'victims_count', 'consequence_scale']},
+                'security_posts': {'index': 6, 'fields': ['post_type', 'units', 'persons']},
+                'protection_assessment': {'index': 7, 'fields': ['element_name', 'requirements', 'physical_protection', 'terror_prevention', 'sufficiency', 'compensation']}
+            }
+
+            for table_key, table_info in table_map.items():
+                table = doc.tables[table_info['index']]
+                data = table_fields[table_key]
+                row_count = max(len(data[field]) for field in data if data[field]) if any(data[field] for field in data) else 0
+
+                if table_key == 'security_posts':
+                    row_count = min(row_count, 5)  # Ограничиваем до 5 строк
+                    total_units, total_persons = 0, 0
+
+                # Очищаем существующие строки (кроме заголовка)
+                while len(table.rows) > 1:
+                    table._element.remove(table.rows[-1]._element)
+
+                # Добавляем новые строки
+                for i in range(row_count):
+                    row = table.add_row()
+                    cells = row.cells
+                    for j, field in enumerate(table_info['fields']):
+                        value = data[field][i] if i < len(data[field]) else ""
+                        cells[j].text = str(value) if value else ""
+                        for para in cells[j].paragraphs:
+                            para.alignment = 1  # Выравнивание по центру
+                        logger.info(f"Добавлена строка в таблицу {table_key}: {field} = {value}")
+
+                    if table_key == 'security_posts':
+                        try:
+                            total_units += int(data['units'][i]) if data['units'][i] else 0
+                            total_persons += int(data['persons'][i]) if data['persons'][i] else 0
+                        except ValueError:
+                            pass
+
+                # Для таблицы security_posts добавляем итоговую строку
+                if table_key == 'security_posts':
+                    row = table.add_row()
+                    cells = row.cells
+                    cells[0].text = "Всего"
+                    cells[1].text = str(total_units)
+                    cells[2].text = str(total_persons)
+                    for para in cells[0].paragraphs + cells[1].paragraphs + cells[2].paragraphs:
+                        para.alignment = 1
+
+        # Заменяем текстовые плейсхолдеры
+        replace_text_placeholders(doc, fields)
+        # Заполняем таблицы
+        fill_tables(doc, table_fields)
 
         # Сохраняем документ
         output = io.BytesIO()
