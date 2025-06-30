@@ -31,67 +31,67 @@ def generate():
             logger.error(f"Шаблон {template_path} не найден")
             return "Ошибка: Шаблон документа не найден", 500
 
-        # Текстовые поля
+        # Текстовые поля с уникальными плейсхолдерами
         text_fields = {
-            'security_classification': '_____________________',
-            'copy_number': '_________',
-            'executive_authority_head': '_______________________________________',
-            'executive_authority_name': '___________________',
-            'approval_date': '"__" _______________ 20__ г.',
-            'security_agency_head': '______________________________________',
-            'security_agency_name': '_________________',
-            'security_agency_date': '"__" _______________ 20__ г.',
-            'mvd_head': '_______________________________________',
-            'mvd_name': '___________________',
-            'mvd_date': '"__" _______________ 20__ г.',
-            'mchs_head': '______________________________________',
-            'mchs_name': '_________________',
-            'mchs_date': '"__" _______________ 20__ г.',
-            'rosgvardia_head': '____________________________________',
-            'rosgvardia_name': '__________________',
-            'rosgvardia_date': '"__" _______________ 20__ г.',
-            'locality': '___________________________________________',
-            'object_name': '___________________________________________________________________________',
-            'object_address': '___________________________________________________________________________',
-            'object_affiliation': '___________________________________________________________________________',
-            'object_boundaries': '___________________________________________________________________________',
-            'object_area_perimeter': '___________________________________________________________________________',
-            'monitoring_results': '___________________________________________________________________________',
-            'object_category': '___________________________________________________________________________',
-            'mvd_territory': '___________________________________________________________________________',
-            'public_organizations': '___________________________________________________________________________',
-            'terrain_characteristics': '___________________________________________________________________________',
-            'staff_count': '___________________________________________________________________________',
-            'attendance': '___________________________________________________________________________',
-            'tenants_info': '___________________________________________________________________________',
-            'illegal_actions_a': '___________________________________________________________________',
-            'diversion_manifestations_b': '____________________________________________________________________',
-            'security_forces_a': '___________________________________________________________________',
-            'patrol_routes_b': '___________________________________________________________________',
-            'stationary_posts_b': '___________________________________________________________________',
-            'public_guards_d': '___________________________________________________________________',
-            'security_equipment_e': '__________________________________________________________________',
-            'notification_system_zh': '___________________________________________________________________________',
-            'notification_system_zh_2': '___________________________________________________________________________',
-            'notification_system_zh_3': '___________________________________________________________________________',
-            'notification_system_zh_4': '___________________________________________________________________________',
-            'notification_system_zh_5': '___________________________________________________________________________',
-            'notification_system_zh_6': '___________________________________________________________________________',
-            'technical_security_a': '__________________________________________________________________',
-            'fire_safety_b': '__________________________________________________________________',
-            'evacuation_system_v': '___________________________________________________________________________',
-            'security_reliability_a': '___________________________________________________________________',
-            'urgent_measures_b': '___________________________________________________________________',
-            'funding_v': '____________________________________________________________________',
-            'additional_info': '___________________________________________________________________________',
-            'recreation_areas': '___________________________________________________________________________',
-            'communication_schemes': '___________________________________________________________________________',
-            'evacuation_instructions': '___________________________________________________________________________',
-            'correction_log': '___________________________________________________________________________',
-            'rights_holder': '___________________________________________________________________________',
-            'rights_holder_name': '________________________________ __________________________________________',
-            'creation_date': 'Составлен "__" ____________ 20__ г.',
-            'update_date': 'Актуализирован "__" _________ 20__ г.'
+            'security_classification': '[security_classification]',
+            'copy_number': '[copy_number]',
+            'executive_authority_head': '[executive_authority_head]',
+            'executive_authority_name': '[executive_authority_name]',
+            'approval_date': '[approval_date]',
+            'security_agency_head': '[security_agency_head]',
+            'security_agency_name': '[security_agency_name]',
+            'security_agency_date': '[security_agency_date]',
+            'mvd_head': '[mvd_head]',
+            'mvd_name': '[mvd_name]',
+            'mvd_date': '[mvd_date]',
+            'mchs_head': '[mchs_head]',
+            'mchs_name': '[mchs_name]',
+            'mchs_date': '[mchs_date]',
+            'rosgvardia_head': '[rosgvardia_head]',
+            'rosgvardia_name': '[rosgvardia_name]',
+            'rosgvardia_date': '[rosgvardia_date]',
+            'locality': '[locality]',
+            'object_name': '[object_name]',
+            'object_address': '[object_address]',
+            'object_affiliation': '[object_affiliation]',
+            'object_boundaries': '[object_boundaries]',
+            'object_area_perimeter': '[object_area_perimeter]',
+            'monitoring_results': '[monitoring_results]',
+            'object_category': '[object_category]',
+            'mvd_territory': '[mvd_territory]',
+            'public_organizations': '[public_organizations]',
+            'terrain_characteristics': '[terrain_characteristics]',
+            'staff_count': '[staff_count]',
+            'attendance': '[attendance]',
+            'tenants_info': '[tenants_info]',
+            'illegal_actions_a': '[illegal_actions_a]',
+            'diversion_manifestations_b': '[diversion_manifestations_b]',
+            'security_forces_a': '[security_forces_a]',
+            'patrol_routes_b': '[patrol_routes_b]',
+            'stationary_posts_b': '[stationary_posts_b]',
+            'public_guards_d': '[public_guards_d]',
+            'security_equipment_e': '[security_equipment_e]',
+            'notification_system_zh': '[notification_system_zh]',
+            'notification_system_zh_2': '[notification_system_zh_2]',
+            'notification_system_zh_3': '[notification_system_zh_3]',
+            'notification_system_zh_4': '[notification_system_zh_4]',
+            'notification_system_zh_5': '[notification_system_zh_5]',
+            'notification_system_zh_6': '[notification_system_zh_6]',
+            'technical_security_a': '[technical_security_a]',
+            'fire_safety_b': '[fire_safety_b]',
+            'evacuation_system_v': '[evacuation_system_v]',
+            'security_reliability_a': '[security_reliability_a]',
+            'urgent_measures_b': '[urgent_measures_b]',
+            'funding_v': '[funding_v]',
+            'additional_info': '[additional_info]',
+            'recreation_areas': '[recreation_areas]',
+            'communication_schemes': '[communication_schemes]',
+            'evacuation_instructions': '[evacuation_instructions]',
+            'correction_log': '[correction_log]',
+            'rights_holder': '[rights_holder]',
+            'rights_holder_name': '[rights_holder_name]',
+            'creation_date': '[creation_date]',
+            'update_date': '[update_date]'
         }
 
         # Собираем данные из формы
@@ -168,17 +168,16 @@ def generate():
                     value = fields.get(key, '').strip()
                     text = text.replace(placeholder, value if value else "")
             
-            # Замена плейсхолдеров для таблиц
-            for table_key, table_data in table_fields.items():
+            # Замена плейсхолдеров для таблиц (кроме пунктов 4 и 10г)
+            for table_key in [k for k in table_fields.keys() if k not in ['transport_communications', 'security_posts']]:
+                table_data = table_fields[table_key]
                 row_count = max(len(table_data[key]) for key in table_data if table_data[key]) if any(table_data[key] for key in table_data) else 0
                 for i in range(row_count):
                     for sub_key in table_data.keys():
-                        # Обрабатываем оба формата плейсхолдеров: {table[i].key} и {table[i].key}
-                        placeholder1 = f"{{{table_key}[{i}].{sub_key}}}"
-                        placeholder2 = f"{{{table_key}\[{i}\].{sub_key}}}"
-                        if placeholder1 in text or placeholder2 in text:
+                        placeholder = f"{{{table_key}[{i}].{sub_key}}}"
+                        if placeholder in text:
                             value = table_data[sub_key][i] if i < len(table_data[sub_key]) and table_data[sub_key][i] else ""
-                            text = text.replace(placeholder1, str(value)).replace(placeholder2, str(value))
+                            text = text.replace(placeholder, str(value))
             return text
 
         # Функция для замены плейсхолдеров в таблицах
@@ -204,16 +203,6 @@ def generate():
         # Замена плейсхолдеров в таблицах
         for table in doc.tables:
             replace_table_placeholders(table, fields, table_fields)
-
-        # Обработка специальных случаев для таблицы security_posts (итоговая строка)
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    if "Всего" in cell.text and "{security_posts[5].units}" in cell.text:
-                        total_units = sum(int(x) for x in table_fields['security_posts']['units'] if x.isdigit())
-                        total_persons = sum(int(x) for x in table_fields['security_posts']['persons'] if x.isdigit())
-                        cell.text = cell.text.replace("{security_posts[5].units}", str(total_units))
-                        cell.text = cell.text.replace("{security_posts[5].persons}", str(total_persons))
 
         # Сохраняем документ
         output = io.BytesIO()
